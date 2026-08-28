@@ -26,14 +26,20 @@ jobs:
              "arrivalTime":"2025-06-15T11:40:00+09:00"}}
           </script></head><body>Your Lufthansa booking confirmation</body></html>
           HTML
-          docker run --rm -v /tmp/sample.html:/sample.html debian:bookworm-slim bash -c '
-            set -e
-            apt-get update -q
-            apt-get install -y -q kitinerary-extractor >/dev/null
-            echo "=== version ==="
-            kitinerary-extractor --version || true
-            echo "=== extraction of schema.org sample ==="
-            kitinerary-extractor /sample.html
-            echo "=== image size cost ==="
-            du -sh /usr /var/lib 2>/dev/null | tail -2
-          '
+          for base in debian:trixie-slim debian:bookworm-slim; do
+            echo "########## $base ##########"
+            docker run --rm -v /tmp/sample.html:/sample.html "$base" bash -c '
+              apt-get update -q >/dev/null 2>&1
+              echo "=== packages matching itinerary ==="
+              apt-cache search itinerary || true
+              if apt-get install -y -q kitinerary-extractor >/dev/null 2>&1; then
+                echo "=== installed OK ==="
+                echo "=== extraction of schema.org sample ==="
+                kitinerary-extractor /sample.html || cat /sample.html | kitinerary-extractor || true
+                echo "=== install size ==="
+                du -sh /usr 2>/dev/null
+              else
+                echo "=== kitinerary-extractor NOT installable on this base ==="
+              fi
+            ' || true
+          done
