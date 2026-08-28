@@ -45,6 +45,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 <!-- one line per closed ticket: name (linked) + gist -->
 
+- [Stack and hosting decision](tickets/003-stack-and-hosting.md):
+  Next.js/Vercel + fresh Supabase (`eu-central-1`, Auth with combined
+  Gmail consent, Realtime, Vault) + one Fly.io worker container carrying the
+  kitinerary binary; `import_jobs` table as the job state machine; Resend,
+  Sentry, GitHub Actions; pnpm monorepo. Full record: docs/adr/0001-stack.md.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
@@ -77,13 +82,10 @@ made and the build itself is either done or handed off as an unambiguous plan.
   how that harness works waits on the extraction pipeline design.
 - **Empty states and the settings/delete screens** — the wireframes' own "try
   next" list names them; design + build once the privacy/deletion model closes.
-- **"Save as image" share export** — how the map+stats image gets rendered;
-  waits on map stack decisions.
-- **Email notification on import completion** ("We'll email you when it's
-  done") — provider and copy; waits on stack.
+- **"Save as image" share export** — rendering approach decided (canvas
+  export per the basemap ticket); the build slice waits on the build plan.
 - **Hi-fi visual pass** — the wireframes say it's "a skin, not a re-layout";
   the reveal hi-fi prototype ticket will set the bar for the rest.
-- **Deployment / CI** — waits on stack.
 
 ## Out of scope
 
