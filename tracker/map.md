@@ -115,6 +115,10 @@ made and the build itself is either done or handed off as an unambiguous plan.
   drawing in and an in-browser "Save as image"; UTC derivation made durations
   measurable, and implausible arrivals are recorded as unknown rather than
   guessed.
+- [M6 settings, deletion and corrections](tickets/021-m6-settings-and-corrections.md):
+  privacy copy lives once and generates the doc; settings states what is held
+  and offers the four separate actions with typed confirmation; corrections
+  record immutable labelled examples and apply their effect; empty states.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
