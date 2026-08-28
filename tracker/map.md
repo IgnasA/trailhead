@@ -81,6 +81,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   docs/brief.md; deltas vs the map's decisions recorded (the map governs).
 - [Design sync access](tickets/002-design-sync-access.md): `/design-login`
   done; DesignSync reads the design project directly.
+- [Google Cloud OAuth setup](tickets/013-google-cloud-oauth-setup.md):
+  done via scripts/setup-google-oauth.sh — Supabase project
+  `giylqxatradpvsytpery` (eu-central-1) + Google Cloud `trailhead-506918`,
+  consent in Testing mode, gmail.readonly scope, OAuth client wired into
+  Supabase Auth. M1 is ungated.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
