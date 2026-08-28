@@ -1,0 +1,39 @@
+# M2 spike: can kitinerary-extractor run on the worker's Debian base?
+# Answers the Docker question from the build plan before M2 hardens.
+# Throwaway — delete once tracker ticket 017 records the verdict.
+name: Spike kitinerary
+on:
+  push:
+    branches: [m2/import-pipeline]
+    paths: [".github/workflows/spike-kitinerary.yml"]
+  workflow_dispatch:
+
+jobs:
+  spike:
+    runs-on: ubuntu-latest
+    steps:
+      - name: kitinerary on Debian bookworm (worker base)
+        run: |
+          cat > /tmp/sample.html <<'HTML'
+          <html><head><script type="application/ld+json">
+          {"@context":"https://schema.org","@type":"FlightReservation",
+           "reservationNumber":"7QK4RB",
+           "reservationFor":{"@type":"Flight","flightNumber":"710",
+             "airline":{"@type":"Airline","iataCode":"LH","name":"Lufthansa"},
+             "departureAirport":{"@type":"Airport","iataCode":"FRA","name":"Frankfurt"},
+             "arrivalAirport":{"@type":"Airport","iataCode":"NRT","name":"Narita"},
+             "departureTime":"2025-06-14T17:05:00+02:00",
+             "arrivalTime":"2025-06-15T11:40:00+09:00"}}
+          </script></head><body>Your Lufthansa booking confirmation</body></html>
+          HTML
+          docker run --rm -v /tmp/sample.html:/sample.html debian:bookworm-slim bash -c '
+            set -e
+            apt-get update -q
+            apt-get install -y -q kitinerary-extractor >/dev/null
+            echo "=== version ==="
+            kitinerary-extractor --version || true
+            echo "=== extraction of schema.org sample ==="
+            kitinerary-extractor /sample.html
+            echo "=== image size cost ==="
+            du -sh /usr /var/lib 2>/dev/null | tail -2
+          '
