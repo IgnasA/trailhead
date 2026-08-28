@@ -85,3 +85,29 @@ and a job retry clears its own stale failure rows.
 Resume strategy for the corrected run: re-read only the 71 emails that
 produced extractions; keep the 302 "not a flight" verdicts cached, since that
 verdict cannot change and re-asking costs money for nothing.
+
+## Resolution
+
+The corrected run completed in 16 minutes with **zero failures** and produced
+a real travel history from the live mailbox:
+
+- **102 flights** (was 49), 2016-06-03 → 2026-04-28
+- **12 trips** (was 2) — e.g. VNO→FRA→ICN→FRA→VNO, VNO→STN→ACE→AGP→VNO
+- 30 countries, 49 airports, 17 airlines, 243,891 km
+- 198 extractions merged to 102 flights — dedupe collapsed 96 duplicates
+- 434 LLM calls; 1,277,446 input + 52,663 output tokens ≈ **$1.54**
+- 302 emails skipped from cache; 438 processed
+
+M2's success criterion (the user's real mailbox imports — flights extracted,
+deduplicated, visible as counts) is met, and frame 1c renders it live.
+
+Two open observations for later milestones, neither a defect:
+
+- **73 of 102 flights are needs_review.** The chaining is deliberately
+  conservative (must start and end at the year's home airport), and mailboxes
+  genuinely lack some legs. This is the designed decline-to-guess behaviour,
+  and the volume says the M3 review flow (frame 1g) carries real weight —
+  worth revisiting the home-airport rule once that screen exists and can show
+  what it is refusing to guess.
+- **The completion email is untested**: RESEND_API_KEY is unset, so the
+  worker logged a skip. Wiring Resend is a small M6 task.

@@ -95,6 +95,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   reference-data vendoring working (9,054 airports / 993 airlines); CI live;
   styling = plain Modernist CSS (fog item resolved). Leftovers: Fly app
   creation + DB seeding, both needing user credentials.
+- [M2 import pipeline](tickets/017-m2-import-pipeline.md): live mailbox
+  imported end-to-end — 102 flights, 12 trips, 30 countries, 243,891 km in
+  16 min for ~$1.54; kitinerary ruled out of the image, extraction is
+  schema.org + capped Haiku with a breaker, normalization, and per-segment
+  storage.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
