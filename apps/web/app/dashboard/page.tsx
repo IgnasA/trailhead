@@ -3,7 +3,7 @@
 // does the containing.
 import Link from "next/link";
 import { supabaseServer } from "../../lib/supabase/server";
-import { KpiCell, ReviewNotice, formatRoute } from "./ui";
+import { EmptyState, KpiCell, ReviewNotice, formatRoute } from "./ui";
 
 export default async function Overview({
   searchParams,
@@ -29,6 +29,20 @@ export default async function Overview({
   const years = (perYear ?? []) as { year: number; flights: number; km: number }[];
   const busiest = years.reduce((a, b) => (b.flights > (a?.flights ?? 0) ? b : a), years[0]);
   const maxFlights = Math.max(1, ...years.map((y) => y.flights));
+
+  if (!s.flights) {
+    return (
+      <EmptyState
+        title={year ? `No flights in ${year}.` : "No flights yet."}
+        body={
+          year
+            ? "Pick another year, or clear the filter to see everything."
+            : "Once an import finishes, your history appears here — flights, trips, countries and the map."
+        }
+        action={year ? { href: "/dashboard", label: "All years" } : { href: "/import", label: "Import my mailbox" }}
+      />
+    );
+  }
 
   return (
     <>

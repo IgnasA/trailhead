@@ -9,7 +9,8 @@
     "dev": "pnpm --filter @trailhead/web dev",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "vendor:reference-data": "node scripts/vendor-reference-data.mjs"
+    "vendor:reference-data": "node scripts/vendor-reference-data.mjs",
+    "docs:privacy": "node --experimental-strip-types scripts/generate-privacy-doc.mjs"
   },
   "devDependencies": {
     "@photostructure/tz-lookup": "^11.6.1",

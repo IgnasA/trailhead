@@ -265,5 +265,8 @@ textarea.input { min-height: 90px; resize: vertical; }
   /* Five cells in a 2-up grid leaves a dead cell — let the last one span. */
   .kpi-row > div:last-child:nth-child(odd) { grid-column: span 2; border-right: none !important; }
   .hero-grid { grid-template-columns: 1fr !important; }
+  /* Frame 1i: four superlatives don't fit a phone in one row. */
+  .supers { grid-template-columns: 1fr 1fr !important; }
+  .supers > div { border-right: none !important; padding-left: 0 !important; }
   .hero-grid > div:first-child { border-right: none !important; }
 }

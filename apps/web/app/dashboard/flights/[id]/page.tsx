@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { supabaseServer } from "../../../../lib/supabase/server";
 import { formatLocal } from "../../ui";
 import { SourceEmail } from "./SourceEmail";
+import { Corrections } from "./Corrections";
 
 interface SourceRow {
   id: string;
@@ -133,10 +134,7 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap" }}>
-            <button className="btn btn-secondary" disabled title="Corrections land in M6">Correct this flight</button>
-            <button className="btn btn-secondary" disabled title="Corrections land in M6">Not a flight</button>
-          </div>
+          <Corrections flightId={flight.id} origin={flight.origin_iata} dest={flight.dest_iata} />
         </section>
 
         <section style={{ padding: "26px 24px", background: "var(--color-surface)" }}>

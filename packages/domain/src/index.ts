@@ -6,3 +6,4 @@ export * from "./classify.js";
 export * from "./confidence.js";
 export * from "./flightNumber.js";
 export * from "./emailBody.js";
+export * from "./privacy.js";

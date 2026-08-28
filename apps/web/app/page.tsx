@@ -1,6 +1,7 @@
 // Frame 1a — the landing. Headline and sub verbatim from the brief (§5).
 // The map teaser is a static placeholder until M4 ships the build-time render.
 import Link from "next/link";
+import { LandingTeaser } from "./LandingTeaser";
 
 const TRUST_ROW = [
   ["Read-only", "We can never send, change, or delete your mail."],
@@ -58,20 +59,10 @@ export default function Home() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
-            style={{
-              flex: 1,
-              minHeight: 330,
-              backgroundColor: "var(--color-neutral-200)",
-              backgroundImage:
-                "linear-gradient(to top right, transparent calc(50% - 1px), var(--color-neutral-300), transparent calc(50% + 1px)), linear-gradient(to bottom right, transparent calc(50% - 1px), var(--color-neutral-300), transparent calc(50% + 1px))",
-              display: "flex",
-              alignItems: "flex-end",
-              padding: 14,
-            }}
-          >
-            <span style={{ font: "600 10px/1 var(--font-body)", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--color-neutral-600)" }}>
-              Sample route map — static teaser lands in M4
+          <div style={{ flex: 1, minHeight: 330, position: "relative", overflow: "hidden" }}>
+            <LandingTeaser />
+            <span style={{ position: "absolute", left: 14, bottom: 14, font: "600 10px/1 var(--font-body)", letterSpacing: ".1em", textTransform: "uppercase", color: "var(--color-neutral-600)" }}>
+              Sample route map — not your data
             </span>
           </div>
           <div style={{ borderTop: "2px solid var(--color-text)", padding: 14 }}>

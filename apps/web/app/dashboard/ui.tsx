@@ -52,3 +52,18 @@ export function formatLocal(local: string | null, tz: string | null): string | n
     .find((p) => p.type === "timeZoneName")?.value;
   return abbrev ? `${time} ${abbrev}` : time;
 }
+
+/** Empty states say what to do next, not just that there's nothing here. */
+export function EmptyState({ title, body, action }: { title: string; body: string; action?: { href: string; label: string } }) {
+  return (
+    <div style={{ padding: "48px 24px", maxWidth: "38em" }}>
+      <h3 style={{ margin: 0 }}>{title}</h3>
+      <p style={{ marginTop: 10 }} className="text-muted">{body}</p>
+      {action && (
+        <Link href={action.href} className="btn btn-primary" style={{ marginTop: 8, display: "inline-block" }}>
+          {action.label}
+        </Link>
+      )}
+    </div>
+  );
+}

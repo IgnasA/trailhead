@@ -38,14 +38,17 @@ export default async function DashboardLayout({
             <NavLink href="/dashboard">Overview</NavLink>
             <NavLink href="/dashboard/trips">Trips</NavLink>
             <NavLink href="/dashboard/flights">Flights</NavLink>
-            <span style={{ font: "600 12px/1 var(--font-body)", color: "var(--color-neutral-500)" }} title="Ships in M4">
-              Map
-            </span>
+            <NavLink href="/dashboard/map">Map</NavLink>
           </div>
         </div>
-        <Suspense fallback={null}>
-          <YearFilter years={yearList} />
-        </Suspense>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Suspense fallback={null}>
+            <YearFilter years={yearList} />
+          </Suspense>
+          <Link href="/settings" style={{ font: "600 12px/1 var(--font-body)", color: "color-mix(in srgb, var(--color-text) 55%, transparent)", textDecoration: "none" }}>
+            Settings
+          </Link>
+        </div>
       </nav>
       {children}
     </main>
