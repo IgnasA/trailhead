@@ -1,7 +1,7 @@
 // Import worker: claims queued import_jobs (FOR UPDATE SKIP LOCKED) and runs
 // the pipeline. One job at a time per worker; scaling = more machines.
 import pg from "pg";
-import { GmailAuthError } from "./gmail.js";
+import { GmailAuthError } from "@trailhead/gmail";
 import { runJob } from "./pipeline.js";
 
 const POLL_MS = 5_000;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bodyForExtraction, htmlToText } from "./emailBody.js";
+import { bodyForExtraction, htmlToText, tidyText } from "./emailBody.js";
 
 describe("htmlToText", () => {
   it("drops script/style and keeps the values", () => {
@@ -29,7 +29,21 @@ describe("htmlToText", () => {
   });
 });
 
+describe("tidyText", () => {
+  it("collapses the CRLF padding airlines put in plain-text parts", () => {
+    // A real Wizz Air itinerary arrived with ~2,300 chars of \r\n padding.
+    const padded = "Wizz Air" + "\r\n".repeat(40) + "flights\r\nhotel";
+    expect(tidyText(padded)).toBe("Wizz Air\n\nflights\nhotel");
+  });
+});
+
 describe("bodyForExtraction", () => {
+  it("tidies the plain-text part it chooses", () => {
+    expect(bodyForExtraction("A" + "\r\n".repeat(30) + "B".repeat(300), "")).toBe(
+      "A\n\n" + "B".repeat(300),
+    );
+  });
+
   it("prefers a real plain-text part", () => {
     const text = "Booking confirmed. ".repeat(20);
     expect(bodyForExtraction(text, "<p>html version</p>")).toContain("Booking confirmed");

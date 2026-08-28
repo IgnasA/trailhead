@@ -17,7 +17,7 @@ import {
   normalizeFlightNumber,
   type FlightExtraction,
 } from "@trailhead/domain";
-import { fetchEmail, listAllMessageIds, refreshAccessToken } from "./gmail.js";
+import { fetchEmail, listAllMessageIds, refreshAccessToken } from "@trailhead/gmail";
 import { LlmUnavailableError, llmExtract } from "./llm.js";
 import { sendCompletionEmail } from "./email.js";
 

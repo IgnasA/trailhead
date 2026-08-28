@@ -250,3 +250,20 @@ textarea.input { min-height: 90px; resize: vertical; }
 .dialog-body { font-size: 14px; opacity: 0.85; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 
+
+/* ── Trailhead responsive rules (frame 1j: the dashboard on mobile) ────────
+   The Modernist grid is the layout; on narrow screens the columns stack and
+   the KPI row becomes a 2-up grid rather than five unreadable slivers. */
+@media (max-width: 760px) {
+  .split { grid-template-columns: 1fr !important; }
+  .split > section { border-right: none !important; }
+  .kpi-row { grid-template-columns: 1fr 1fr !important; }
+  .kpi-row > div { border-bottom: 1px solid var(--color-divider); }
+  .kpi-row > div:nth-child(odd) { border-right: 1px solid var(--color-divider) !important; }
+  .kpi-row > div:nth-child(even) { border-right: none !important; }
+  .kpi-value { font-size: 28px !important; }
+  /* Five cells in a 2-up grid leaves a dead cell — let the last one span. */
+  .kpi-row > div:last-child:nth-child(odd) { grid-column: span 2; border-right: none !important; }
+  .hero-grid { grid-template-columns: 1fr !important; }
+  .hero-grid > div:first-child { border-right: none !important; }
+}
