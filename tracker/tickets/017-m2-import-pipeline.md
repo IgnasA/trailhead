@@ -58,3 +58,30 @@ bounds the spend; the number in the map's decision line was optimistic.
 
 Remaining to close: credits on the Anthropic account, then a clean run to the
 completion email — the milestone's success criterion.
+
+## What the first complete import taught us
+
+The run finished (729 processed, 22 min) and produced 49 flights — real ones
+— but only **2 trips**, with 45 of 49 flights in needs_review. Reading the
+output found four faults, all now fixed:
+
+1. **Only the first segment was extracted.** The tier-3 system prompt said so
+   explicitly, so every return leg was lost; trip chains then correctly
+   refused to close. The tool now returns an array of segments and the prompt
+   calls missing a return leg a serious error.
+2. **The schema allowed one extraction per email** — unique
+   (source_email_id, extraction_version) — so multi-segment emails would have
+   been truncated anyway. Migration 0005 keys per segment.
+3. **Flight numbers weren't normalized**: "7Q-1912" and "1912" became two
+   flights. `normalizeFlightNumber` now runs before the merge key and on
+   write; its tests are built from the real duplicate this run produced.
+4. **Raw HTML went to the model**, spending most tokens on markup. Bodies are
+   flattened (brief §16 normalization, with tests) and capped at 12k chars.
+
+Operational fixes: the LLM cap is configurable (300 stranded 367 emails),
+per-job token usage is recorded so spend is measurable rather than estimated,
+and a job retry clears its own stale failure rows.
+
+Resume strategy for the corrected run: re-read only the 71 emails that
+produced extractions; keep the 302 "not a flight" verdicts cached, since that
+verdict cannot change and re-asking costs money for nothing.
