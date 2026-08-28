@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="stylesheet" href="_ds/modernist-99a44c1e-5f8c-4141-9231-cb5ee9543f2f/styles.css"><script src="_ds/modernist-99a44c1e-5f8c-4141-9231-cb5ee9543f2f/_ds_bundle.js"></script><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#e6e4e2;font-family:"Archivo",system-ui,sans-serif}.dv-turn{padding:44px 48px 36px;border-bottom:2px solid rgba(32,30,29,.35);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 24px}.dv-tid{font:700 10px "Archivo",monospace;padding:4px 8px;background:#201e1d;color:#f3f2f2;text-decoration:none}.dv-tname{font:600 13px/1.2 "Archivo",sans-serif;color:#201e1d;letter-spacing:.02em}.dv-opts{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}.dv-oid{font:700 10.5px "Archivo",monospace;padding:4px 8px;background:rgba(32,30,29,.12);color:#201e1d;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:9px;font:500 11px/1.3 "Archivo",sans-serif;color:rgba(32,30,29,.6);letter-spacing:.04em;text-transform:uppercase}.dv-card{max-width:100%;background:#f3f2f2;border:2px solid #201e1d}.dv-opt:target .dv-oid{background:#ec3013;color:#fff}.dv-next{margin:26px 0 0;font:12px/1.6 "Archivo",sans-serif;color:rgba(32,30,29,.55)}</style></helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">MVP flow wireframes — first-run path, greybox, annotated</span></div>
+
+<div style="max-width:1180px;margin:0 0 34px;padding:20px 24px;background:#f3f2f2;border:2px solid #201e1d">
+<div style="font:700 10px/1 'Archivo';letter-spacing:.14em;text-transform:uppercase;color:#ec3013;margin-bottom:12px">Assumptions I made</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:2px solid #201e1d">
+<div style="padding:14px 18px 4px 0;border-right:1px solid rgba(32,30,29,.35)"><div style="font:600 12px/1.4 'Archivo';margin-bottom:6px">Structure, not style</div><div style="font:400 11.5px/1.6 'Archivo';color:rgba(32,30,29,.65)">Greybox blocks; real copy only where the wording is the design (headline, permission language, import log). The Modernist grid, 2px rules and flush-left alignment are already load-bearing here, so the hi-fi pass is a skin, not a re-layout.</div></div>
+<div style="padding:14px 18px 4px 18px;border-right:1px solid rgba(32,30,29,.35)"><div style="font:600 12px/1.4 'Archivo';margin-bottom:6px">Invented data, consistent everywhere</div><div style="font:400 11.5px/1.6 'Archivo';color:rgba(32,30,29,.65)">One fictional user: 2019→2026, 132 flights, 47 countries, 91 airports, 312,482 km, 14 airlines. Same figures across every frame so the numbers read as one story.</div></div>
+<div style="padding:14px 0 4px 18px"><div style="font:600 12px/1.4 'Archivo';margin-bottom:6px">The magic moment is the product</div><div style="font:400 11.5px/1.6 'Archivo';color:rgba(32,30,29,.65)">Built as a scroll story in three stops: one number, then the stack, then the map. The dashboard is where you live afterwards; the reveal is what makes you tell someone.</div></div>
+</div>
+</div>
+
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a"><div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Landing — desktop</div>
+<div class="dv-card" style="width:920px;position:relative">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:2px solid #201e1d">
+<div style="display:flex;align-items:baseline;gap:22px"><div style="font:800 15px/1 'Archivo';letter-spacing:-.01em">TRAILHEAD</div><div style="display:flex;gap:16px"><div style="width:46px;height:8px;background:#d7d3d3"></div><div style="width:38px;height:8px;background:#d7d3d3"></div><div style="width:52px;height:8px;background:#d7d3d3"></div></div></div>
+<div style="display:flex;align-items:center;gap:14px"><div style="width:44px;height:8px;background:#d7d3d3"></div><div style="padding:9px 14px;background:#ec3013;color:#f3f2f2;font:600 12px/1 'Archivo'">Connect Gmail</div></div>
+</div>
+<div style="display:grid;grid-template-columns:1.05fr .95fr">
+<div style="padding:44px 28px 34px;border-right:2px solid #201e1d">
+<div style="font:700 10px/1 'Archivo';letter-spacing:.14em;text-transform:uppercase;color:rgba(32,30,29,.5);margin-bottom:22px">Zero manual entry</div>
+<div style="font:800 46px/1.04 'Archivo';letter-spacing:-.025em;max-width:9.5em;text-wrap:balance">See everywhere you've ever travelled.</div>
+<div style="font:400 15px/1.5 'Archivo';color:rgba(32,30,29,.7);max-width:24em;margin:20px 0 28px">Connect Gmail and automatically reconstruct your flight history.</div>
+<div style="display:flex;align-items:center;gap:14px"><div style="padding:13px 18px;background:#ec3013;color:#f3f2f2;font:600 13px/1 'Archivo'">Connect Gmail</div><div style="width:150px;height:9px;background:#d7d3d3"></div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);margin-top:38px;border-top:2px solid #201e1d">
+<div style="padding:16px 14px 6px 0;border-right:1px solid rgba(32,30,29,.35)"><div style="font:700 22px/1 'Archivo'">Read-only</div><div style="width:70px;height:7px;background:#d7d3d3;margin-top:9px"></div></div>
+<div style="padding:16px 14px 6px 14px;border-right:1px solid rgba(32,30,29,.35)"><div style="font:700 22px/1 'Archivo'">~90 sec</div><div style="width:56px;height:7px;background:#d7d3d3;margin-top:9px"></div></div>
+<div style="padding:16px 0 6px 14px"><div style="font:700 22px/1 'Archivo'">Delete</div><div style="width:78px;height:7px;background:#d7d3d3;margin-top:9px"></div></div>
+</div>
+</div>
+<div style="padding:0;display:flex;flex-direction:column">
+<div style="flex:1;min-height:330px;background-color:#eae7e7;background-image:linear-gradient(to top right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px)),linear-gradient(to bottom right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px));display:flex;align-items:flex-end;padding:14px"><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:#7d7979">Sample route map — static teaser, not user data</div></div>
+<div style="border-top:2px solid #201e1d;padding:14px;display:flex;gap:10px"><div style="width:120px;height:8px;background:#d7d3d3"></div><div style="width:80px;height:8px;background:#d7d3d3"></div></div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none">
+<span style="position:absolute;left:-11px;top:118px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">1</span>
+<span style="position:absolute;left:-11px;top:300px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">2</span>
+<span style="position:absolute;left:-11px;top:406px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">3</span>
+<span style="position:absolute;right:-11px;top:76px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">4</span>
+</div></sc-if>
+</div>
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="width:920px;display:flex;flex-direction:column;gap:7px;padding-top:4px">
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">1</span><span>Headline and sub verbatim from the brief. No hero image of a plane — the promise is about <em>your</em> data, so the visual payoff is deliberately withheld until after import.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">2</span><span>One red CTA on the page (nav button is the same action). Secondary link = "How it works / what we read".</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">3</span><span>Trust row answers the three objections that kill Gmail-connect conversion, in order: scope, time cost, reversibility. This row is the whole privacy pitch above the fold.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">4</span><span>Map is a canned demo dataset shipped as a static asset — never a live MapLibre instance on the marketing page (cost, LCP).</span></div>
+</div></sc-if>
+</div>
+
+<div class="dv-opt" id="1b"><div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Permissions / trust screen</div>
+<div class="dv-card" style="width:640px;position:relative">
+<div style="padding:14px 24px;border-bottom:2px solid #201e1d;font:800 13px/1 'Archivo'">TRAILHEAD</div>
+<div style="padding:32px 24px 28px">
+<div style="font:700 10px/1 'Archivo';letter-spacing:.14em;text-transform:uppercase;color:rgba(32,30,29,.5);margin-bottom:14px">Step 1 of 2</div>
+<div style="font:800 28px/1.1 'Archivo';letter-spacing:-.02em;max-width:14em">Trailhead reads flight emails. Nothing else.</div>
+<div style="margin-top:26px;border-top:2px solid #201e1d;display:grid;grid-template-columns:1fr 1fr">
+<div style="padding:16px 16px 16px 0;border-right:1px solid rgba(32,30,29,.35)">
+<div style="font:700 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:#ec3013;margin-bottom:12px">We store</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:8px;align-items:center"><div style="width:8px;height:8px;background:#201e1d"></div><div style="font:500 12px/1 'Archivo'">Flight records we extract</div></div>
+<div style="display:flex;gap:8px;align-items:center"><div style="width:8px;height:8px;background:#201e1d"></div><div style="font:500 12px/1 'Archivo'">Message ID + subject line</div></div>
+<div style="display:flex;gap:8px;align-items:center"><div style="width:8px;height:8px;background:#201e1d"></div><div style="font:500 12px/1 'Archivo'">A hash, to avoid re-reading</div></div>
+</div></div>
+<div style="padding:16px 0 16px 16px">
+<div style="font:700 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.5);margin-bottom:12px">We never store</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;gap:8px;align-items:center"><div style="width:8px;height:8px;border:1.5px solid #9b9797"></div><div style="font:500 12px/1 'Archivo';color:rgba(32,30,29,.6)">Email bodies</div></div>
+<div style="display:flex;gap:8px;align-items:center"><div style="width:8px;height:8px;border:1.5px solid #9b9797"></div><div style="font:500 12px/1 'Archivo';color:rgba(32,30,29,.6)">Non-flight mail, at all</div></div>
+<div style="display:flex;gap:8px;align-items:center"><div style="width:8px;height:8px;border:1.5px solid #9b9797"></div><div style="font:500 12px/1 'Archivo';color:rgba(32,30,29,.6)">Attachments</div></div>
+</div></div>
+</div>
+<div style="margin-top:0;border-top:2px solid #201e1d;padding:16px 0">
+<div style="font:600 11px/1.5 'Archivo';color:rgba(32,30,29,.7);margin-bottom:10px">Scope requested: <span style="font-family:ui-monospace,Menlo,monospace;background:#eae7e7;padding:2px 5px">gmail.readonly</span></div>
+<div style="width:100%;height:8px;background:#d7d3d3;margin-bottom:6px"></div><div style="width:72%;height:8px;background:#d7d3d3"></div>
+</div>
+<div style="display:flex;align-items:center;gap:14px;border-top:2px solid #201e1d;padding-top:18px">
+<div style="padding:13px 18px;background:#ec3013;color:#f3f2f2;font:600 13px/1 'Archivo'">Continue with Google</div>
+<div style="font:500 12px/1 'Archivo';color:rgba(32,30,29,.6)">Disconnect any time</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none">
+<span style="position:absolute;right:-11px;top:118px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">1</span>
+<span style="position:absolute;right:-11px;top:340px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">2</span>
+<span style="position:absolute;right:-11px;top:430px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">3</span>
+</div></sc-if>
+</div>
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="width:640px;display:flex;flex-direction:column;gap:7px;padding-top:4px">
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">1</span><span>Our own screen <em>before</em> Google's consent dialog. Google's sheet is scary and unbranded; this is where the store / never-store table earns the click.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">2</span><span>Name the literal scope string. Users who care will look it up; users who don't are reassured by the specificity. Copy here should match the app's privacy page word-for-word.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">3</span><span>Logic: derived flight history survives deletion of source-email metadata — so "delete my emails" and "delete my history" are two separate, separately-worded actions in settings.</span></div>
+</div></sc-if>
+</div>
+
+<div class="dv-opt" id="1c"><div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Import progress</div>
+<div class="dv-card" style="width:760px;position:relative">
+<div style="padding:14px 24px;border-bottom:2px solid #201e1d;display:flex;justify-content:space-between;align-items:center"><div style="font:800 13px/1 'Archivo'">TRAILHEAD</div><div style="font:600 11px/1 'Archivo';color:rgba(32,30,29,.55)">Import job #4812 · batch 3 of 7</div></div>
+<div style="display:grid;grid-template-columns:1.25fr .75fr">
+<div style="padding:30px 24px;border-right:2px solid #201e1d">
+<div style="font:800 24px/1.15 'Archivo';letter-spacing:-.02em;margin-bottom:24px">Reading your mailbox</div>
+<div style="display:flex;flex-direction:column;gap:0;font-family:ui-monospace,Menlo,monospace;font-size:12px">
+<div style="display:flex;gap:10px;padding:9px 0;border-top:1px solid rgba(32,30,29,.2)"><span style="color:#ec3013;font-weight:700">✓</span><span>Connected to Gmail</span></div>
+<div style="display:flex;gap:10px;padding:9px 0;border-top:1px solid rgba(32,30,29,.2)"><span style="color:#ec3013;font-weight:700">✓</span><span>Searched mailbox — 1,204 candidates</span></div>
+<div style="display:flex;gap:10px;padding:9px 0;border-top:1px solid rgba(32,30,29,.2)"><span style="color:#ec3013;font-weight:700">✓</span><span>412 cached, skipped</span></div>
+<div style="display:flex;gap:10px;padding:9px 0;border-top:1px solid rgba(32,30,29,.2);font-weight:700"><span>▸</span><span>Extracting flights — 611 / 792</span></div>
+<div style="display:flex;gap:10px;padding:9px 0;border-top:1px solid rgba(32,30,29,.2);color:rgba(32,30,29,.4)"><span>·</span><span>Deduplicating</span></div>
+<div style="display:flex;gap:10px;padding:9px 0;border-top:1px solid rgba(32,30,29,.2);color:rgba(32,30,29,.4)"><span>·</span><span>Reconstructing trips</span></div>
+<div style="display:flex;gap:10px;padding:9px 0;border-top:1px solid rgba(32,30,29,.2);border-bottom:1px solid rgba(32,30,29,.2);color:rgba(32,30,29,.4)"><span>·</span><span>Building your history</span></div>
+</div>
+<div style="margin-top:22px;height:10px;background:#d7d3d3;display:flex"><div style="width:62%;background:#ec3013"></div></div>
+<div style="display:flex;justify-content:space-between;margin-top:8px;font:600 11px/1 'Archivo';color:rgba(32,30,29,.55)"><span>62%</span><span>3 emails could not be parsed — we'll show you which</span></div>
+</div>
+<div style="padding:30px 24px">
+<div style="font:700 10px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.5);margin-bottom:16px">Found so far</div>
+<div style="display:flex;flex-direction:column;border-top:2px solid #201e1d">
+<div style="padding:12px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 30px/1 'Archivo'">106</div><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:6px">Flights</div></div>
+<div style="padding:12px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 30px/1 'Archivo'">39</div><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:6px">Countries</div></div>
+<div style="padding:12px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 30px/1 'Archivo'">74</div><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:6px">Airports</div></div>
+</div>
+<div style="margin-top:18px;font:400 11px/1.5 'Archivo';color:rgba(32,30,29,.6)">You can close this tab. We'll email you when it's done.</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none">
+<span style="position:absolute;left:-11px;top:196px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">1</span>
+<span style="position:absolute;left:-11px;top:376px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">2</span>
+<span style="position:absolute;right:-11px;top:70px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">3</span>
+</div></sc-if>
+</div>
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="width:760px;display:flex;flex-direction:column;gap:7px;padding-top:4px">
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">1</span><span>Every line is a real pipeline stage with a real counter — no fake easing. "412 cached, skipped" is worth surfacing: it makes the cost-control machinery visible as a <em>speed</em> benefit on re-import.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">2</span><span>Per-item failures are stated up front and never abort the job. Failures become a reviewable list later, which is also your extraction-eval feedback loop.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">3</span><span>Counters tick up live — this is the first taste of the payoff, so the numbers here use the same type treatment as the reveal. Job is resumable; the page is a view of job state, not the job itself.</span></div>
+</div></sc-if>
+</div>
+
+<div class="dv-opt" id="1d"><div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Magic moment — scroll story, 3 stops</div>
+<div class="dv-card" style="width:820px;position:relative">
+<div style="padding:30px 28px 44px;border-bottom:2px dashed rgba(32,30,29,.4)">
+<div style="font:600 11px/1 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:rgba(32,30,29,.5)">Stop 1 — the hook</div>
+<div style="margin-top:34px;font:600 13px/1 'Archivo';letter-spacing:.2em;color:rgba(32,30,29,.6)">2019 &nbsp;→&nbsp; 2026</div>
+<div style="display:flex;align-items:flex-end;gap:18px;margin-top:6px"><div style="font:800 132px/.86 'Archivo';letter-spacing:-.045em">132</div><div style="font:700 26px/1 'Archivo';padding-bottom:14px">flights</div></div>
+<div style="margin-top:18px;font:400 15px/1.5 'Archivo';color:rgba(32,30,29,.65);max-width:26em">You've been in the air for 16 days, 4 hours.</div>
+<div style="margin-top:30px;font:600 11px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:#ec3013">Scroll ↓</div>
+</div>
+<div style="padding:30px 28px 40px;border-bottom:2px dashed rgba(32,30,29,.4)">
+<div style="font:600 11px/1 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:rgba(32,30,29,.5);margin-bottom:24px">Stop 2 — the stack</div>
+<div style="border-top:2px solid #201e1d">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 15px/1 'Archivo';letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.6)">Countries</div><div style="font:800 44px/1 'Archivo';letter-spacing:-.03em">47</div></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 15px/1 'Archivo';letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.6)">Airports</div><div style="font:800 44px/1 'Archivo';letter-spacing:-.03em">91</div></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 15px/1 'Archivo';letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.6)">Kilometres</div><div style="font:800 44px/1 'Archivo';letter-spacing:-.03em;color:#ec3013">312,482</div></div>
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding:14px 0;border-bottom:2px solid #201e1d"><div style="font:700 15px/1 'Archivo';letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.6)">Airlines</div><div style="font:800 44px/1 'Archivo';letter-spacing:-.03em">14</div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);margin-top:26px;border-top:1px solid rgba(32,30,29,.25)">
+<div style="padding:14px 12px 0 0;border-right:1px solid rgba(32,30,29,.25)"><div style="font:600 9.5px/1.3 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.5)">Most visited</div><div style="font:700 16px/1.2 'Archivo';margin-top:7px">Italy</div><div style="font:400 11px/1 'Archivo';color:rgba(32,30,29,.6);margin-top:4px">7 trips</div></div>
+<div style="padding:14px 12px 0 12px;border-right:1px solid rgba(32,30,29,.25)"><div style="font:600 9.5px/1.3 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.5)">Most used airline</div><div style="font:700 16px/1.2 'Archivo';margin-top:7px">Ryanair</div><div style="font:400 11px/1 'Archivo';color:rgba(32,30,29,.6);margin-top:4px">31 flights</div></div>
+<div style="padding:14px 12px 0 12px;border-right:1px solid rgba(32,30,29,.25)"><div style="font:600 9.5px/1.3 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.5)">Longest flight</div><div style="font:700 16px/1.2 'Archivo';margin-top:7px">VNO → NRT</div><div style="font:400 11px/1 'Archivo';color:rgba(32,30,29,.6);margin-top:4px">8,414 km</div></div>
+<div style="padding:14px 0 0 12px"><div style="font:600 9.5px/1.3 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.5)">Busiest year</div><div style="font:700 16px/1.2 'Archivo';margin-top:7px">2025</div><div style="font:400 11px/1 'Archivo';color:rgba(32,30,29,.6);margin-top:4px">29 flights</div></div>
+</div>
+</div>
+<div style="padding:30px 28px 28px">
+<div style="font:600 11px/1 'Archivo';letter-spacing:.16em;text-transform:uppercase;color:rgba(32,30,29,.5);margin-bottom:18px">Stop 3 — the map lands</div>
+<div style="height:300px;background-color:#eae7e7;background-image:linear-gradient(to top right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px)),linear-gradient(to bottom right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px));border:1px solid rgba(32,30,29,.3);display:flex;align-items:flex-end;padding:14px"><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:#7d7979">Full-bleed world map — 91 airports, routes draw in on entry</div></div>
+<div style="display:flex;align-items:center;gap:14px;margin-top:22px;border-top:2px solid #201e1d;padding-top:20px">
+<div style="padding:13px 18px;background:#ec3013;color:#f3f2f2;font:600 13px/1 'Archivo'">Open my dashboard</div>
+<div style="padding:13px 18px;border:1px solid rgba(32,30,29,.4);font:600 13px/1 'Archivo'">Save as image</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none">
+<span style="position:absolute;right:-11px;top:120px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">1</span>
+<span style="position:absolute;right:-11px;top:436px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">2</span>
+<span style="position:absolute;right:-11px;top:700px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">3</span>
+<span style="position:absolute;right:-11px;top:1020px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">4</span>
+</div></sc-if>
+</div>
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="width:820px;display:flex;flex-direction:column;gap:7px;padding-top:4px">
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">1</span><span>One number, alone, at absurd scale. "16 days in the air" is a derived stat that reframes the number emotionally — cheap to compute, and it's the line people repeat.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">2</span><span>Stack, not a KPI grid — each row snaps into place on scroll. Ruled rows are the Modernist move; km gets the red because distance is the most surprising figure.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">3</span><span>Superlatives are all deterministic aggregations (§20, §21) — no LLM. Each one links to its filtered dashboard view later.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">4</span><span>Map is the closer, then exactly two exits: go deeper, or share. "Save as image" is your only free acquisition channel — worth building in the MVP even though sharing isn't on the milestone list.</span></div>
+</div></sc-if>
+</div>
+
+<div class="dv-opt" id="1e"><div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Dashboard — KPI header</div>
+<div class="dv-card" style="width:980px;position:relative">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:2px solid #201e1d">
+<div style="display:flex;align-items:baseline;gap:26px"><div style="font:800 14px/1 'Archivo'">TRAILHEAD</div><div style="display:flex;gap:20px;font:600 12px/1 'Archivo'"><span style="border-bottom:2px solid #ec3013;padding-bottom:3px">Overview</span><span style="color:rgba(32,30,29,.55)">Trips</span><span style="color:rgba(32,30,29,.55)">Flights</span><span style="color:rgba(32,30,29,.55)">Places</span></div></div>
+<div style="display:flex;gap:10px;align-items:center"><div style="display:flex;border:1px solid rgba(32,30,29,.4);font:600 11px/1 'Archivo'"><span style="padding:8px 11px;background:#ec3013;color:#f3f2f2">All</span><span style="padding:8px 11px;border-left:1px solid rgba(32,30,29,.4)">2026</span><span style="padding:8px 11px;border-left:1px solid rgba(32,30,29,.4)">2025</span><span style="padding:8px 11px;border-left:1px solid rgba(32,30,29,.4)">2024</span></div><div style="width:26px;height:26px;background:#d7d3d3"></div></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);border-bottom:2px solid #201e1d">
+<div style="padding:22px 18px;border-right:1px solid rgba(32,30,29,.3)"><div style="font:800 40px/1 'Archivo';letter-spacing:-.03em">132</div><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:9px">Flights</div></div>
+<div style="padding:22px 18px;border-right:1px solid rgba(32,30,29,.3)"><div style="font:800 40px/1 'Archivo';letter-spacing:-.03em">47</div><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:9px">Countries</div></div>
+<div style="padding:22px 18px;border-right:1px solid rgba(32,30,29,.3)"><div style="font:800 40px/1 'Archivo';letter-spacing:-.03em">91</div><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:9px">Airports</div></div>
+<div style="padding:22px 18px;border-right:1px solid rgba(32,30,29,.3)"><div style="font:800 40px/1 'Archivo';letter-spacing:-.03em">312k</div><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:9px">Kilometres</div></div>
+<div style="padding:22px 18px"><div style="font:800 40px/1 'Archivo';letter-spacing:-.03em">14</div><div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:9px">Airlines</div></div>
+</div>
+<div style="display:grid;grid-template-columns:1.4fr 1fr">
+<div style="padding:22px 24px;border-right:2px solid #201e1d">
+<div style="font:600 10px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:16px">Flights per year</div>
+<div style="display:flex;align-items:flex-end;gap:12px;height:120px;border-bottom:2px solid #201e1d">
+<div style="flex:1;height:34%;background:#d7d3d3"></div><div style="flex:1;height:12%;background:#d7d3d3"></div><div style="flex:1;height:20%;background:#d7d3d3"></div><div style="flex:1;height:56%;background:#d7d3d3"></div><div style="flex:1;height:74%;background:#d7d3d3"></div><div style="flex:1;height:100%;background:#ec3013"></div><div style="flex:1;height:48%;background:#d7d3d3"></div>
+</div>
+<div style="display:flex;gap:12px;margin-top:8px;font:500 10px/1 'Archivo';color:rgba(32,30,29,.55)"><span style="flex:1;text-align:center">19</span><span style="flex:1;text-align:center">20</span><span style="flex:1;text-align:center">21</span><span style="flex:1;text-align:center">22</span><span style="flex:1;text-align:center">23</span><span style="flex:1;text-align:center">24</span><span style="flex:1;text-align:center">25</span></div>
+</div>
+<div style="padding:22px 24px">
+<div style="font:600 10px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:14px">Recent flights</div>
+<div style="border-top:1px solid rgba(32,30,29,.25)">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div><div style="font:700 12px/1 'Archivo'">VNO → BCN</div><div style="width:60px;height:6px;background:#d7d3d3;margin-top:6px"></div></div><div style="width:38px;height:8px;background:#d7d3d3"></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div><div style="font:700 12px/1 'Archivo'">BCN → VNO</div><div style="width:60px;height:6px;background:#d7d3d3;margin-top:6px"></div></div><div style="width:38px;height:8px;background:#d7d3d3"></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div><div style="font:700 12px/1 'Archivo'">FRA → NRT</div><div style="width:60px;height:6px;background:#d7d3d3;margin-top:6px"></div></div><div style="width:38px;height:8px;background:#d7d3d3"></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div><div style="font:700 12px/1 'Archivo'">VNO → FRA</div><div style="width:60px;height:6px;background:#d7d3d3;margin-top:6px"></div></div><div style="width:38px;height:8px;background:#d7d3d3"></div></div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none">
+<span style="position:absolute;left:-11px;top:78px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">1</span>
+<span style="position:absolute;right:-11px;top:14px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">2</span>
+<span style="position:absolute;left:-11px;top:230px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">3</span>
+</div></sc-if>
+</div>
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="width:980px;display:flex;flex-direction:column;gap:7px;padding-top:4px">
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">1</span><span>KPI row is five equal cells split by rules — same numbers as the reveal, restated calmly. No cards, no shadows; the grid does the containing.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">2</span><span>Year filter is global — it drives KPIs, chart, map and timeline from one piece of state (a URL param, not a store).</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">3</span><span>Per-year bars are the cheapest chart with the most payoff, and they double as the year picker. Red bar = busiest year, computed not configured.</span></div>
+</div></sc-if>
+</div>
+
+<div class="dv-opt" id="1f"><div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Dashboard — map</div>
+<div class="dv-card" style="width:980px;position:relative">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:2px solid #201e1d"><div style="font:800 14px/1 'Archivo'">TRAILHEAD</div><div style="display:flex;gap:20px;font:600 12px/1 'Archivo'"><span style="color:rgba(32,30,29,.55)">Overview</span><span style="border-bottom:2px solid #ec3013;padding-bottom:3px">Map</span><span style="color:rgba(32,30,29,.55)">Trips</span><span style="color:rgba(32,30,29,.55)">Flights</span></div></div>
+<div style="display:grid;grid-template-columns:220px 1fr">
+<div style="padding:20px;border-right:2px solid #201e1d">
+<div style="font:600 10px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:12px">Year</div>
+<div style="display:flex;flex-direction:column;gap:0;border-top:1px solid rgba(32,30,29,.25)">
+<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(32,30,29,.25);font:600 12px/1 'Archivo'"><span>All years</span><span style="color:#ec3013">132</span></div>
+<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(32,30,29,.25);font:500 12px/1 'Archivo';color:rgba(32,30,29,.7)"><span>2026</span><span>14</span></div>
+<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(32,30,29,.25);font:500 12px/1 'Archivo';color:rgba(32,30,29,.7)"><span>2025</span><span>29</span></div>
+<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(32,30,29,.25);font:500 12px/1 'Archivo';color:rgba(32,30,29,.7)"><span>2024</span><span>22</span></div>
+</div>
+<div style="font:600 10px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.55);margin:22px 0 12px">Airline</div>
+<div style="display:flex;flex-direction:column;gap:9px">
+<div style="display:flex;gap:8px;align-items:center"><div style="width:11px;height:11px;background:#ec3013"></div><div style="width:78px;height:7px;background:#d7d3d3"></div></div>
+<div style="display:flex;gap:8px;align-items:center"><div style="width:11px;height:11px;border:1.5px solid #9b9797"></div><div style="width:64px;height:7px;background:#d7d3d3"></div></div>
+<div style="display:flex;gap:8px;align-items:center"><div style="width:11px;height:11px;border:1.5px solid #9b9797"></div><div style="width:86px;height:7px;background:#d7d3d3"></div></div>
+<div style="display:flex;gap:8px;align-items:center"><div style="width:11px;height:11px;border:1.5px solid #9b9797"></div><div style="width:52px;height:7px;background:#d7d3d3"></div></div>
+</div>
+<div style="margin-top:24px;border-top:2px solid #201e1d;padding-top:14px;font:600 10px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:10px">Show</div>
+<div style="display:flex;flex-direction:column;gap:8px;font:500 11.5px/1 'Archivo'"><span>Routes</span><span style="color:rgba(32,30,29,.55)">Airports only</span><span style="color:rgba(32,30,29,.55)">Countries</span></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="height:430px;background-color:#eae7e7;background-image:linear-gradient(to top right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px)),linear-gradient(to bottom right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px));display:flex;align-items:flex-end;justify-content:space-between;padding:14px">
+<div style="font:600 10px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:#7d7979">MapLibre — great-circle routes, airport dots sized by activity</div>
+<div style="display:flex;flex-direction:column;gap:6px;background:#f3f2f2;border:1px solid rgba(32,30,29,.3);padding:9px 11px"><div style="font:600 9px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55)">Legend</div><div style="width:74px;height:6px;background:#d7d3d3"></div><div style="width:58px;height:6px;background:#d7d3d3"></div></div>
+</div>
+<div style="border-top:2px solid #201e1d;padding:14px 20px;display:flex;gap:34px">
+<div><div style="font:700 18px/1 'Archivo'">91</div><div style="font:600 9.5px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:5px">Airports shown</div></div>
+<div><div style="font:700 18px/1 'Archivo'">118</div><div style="font:600 9.5px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:5px">Unique routes</div></div>
+<div><div style="font:700 18px/1 'Archivo'">47</div><div style="font:600 9.5px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:5px">Countries</div></div>
+</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none">
+<span style="position:absolute;left:-11px;top:250px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">1</span>
+<span style="position:absolute;right:-11px;top:100px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">2</span>
+<span style="position:absolute;right:-11px;top:490px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">3</span>
+</div></sc-if>
+</div>
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="width:980px;display:flex;flex-direction:column;gap:7px;padding-top:4px">
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">1</span><span>Only two filter axes ship in the MVP — year and airline (§21: don't overload the map). Airline list is capped to top 6 + "other" so the rail can't grow unbounded.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">2</span><span>Monochrome basemap, red routes — matches the grayscale-imagery rule and keeps the data as the only colour on screen.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">3</span><span>Footer counts restate what's currently filtered — cheap, and it stops the map from being an un-interrogatable picture. Distances precomputed via Haversine at import, never on render.</span></div>
+</div></sc-if>
+</div>
+
+<div class="dv-opt" id="1g"><div class="dv-olabel"><a class="dv-oid" href="#1g">1g</a>Timeline / trips</div>
+<div class="dv-card" style="width:760px;position:relative">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:2px solid #201e1d"><div style="font:800 14px/1 'Archivo'">TRAILHEAD</div><div style="display:flex;gap:18px;font:600 12px/1 'Archivo'"><span style="color:rgba(32,30,29,.55)">Overview</span><span style="color:rgba(32,30,29,.55)">Map</span><span style="border-bottom:2px solid #ec3013;padding-bottom:3px">Trips</span></div></div>
+<div style="padding:20px 24px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px"><div style="font:800 22px/1 'Archivo';letter-spacing:-.02em">2025</div><div style="font:600 11px/1 'Archivo';color:rgba(32,30,29,.55)">29 flights · 11 trips · 74,821 km</div></div>
+<div style="border-top:2px solid #201e1d">
+<div style="padding:16px 0;border-bottom:1px solid rgba(32,30,29,.3)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:700 15px/1.2 'Archivo'">Vilnius → Tokyo → Vilnius</div><div style="font:600 11px/1 'Archivo';color:rgba(32,30,29,.55)">12–24 Jun · 4 flights</div></div>
+<div style="display:flex;align-items:center;gap:0;margin-top:12px">
+<div style="font:600 11px/1 'Archivo';font-family:ui-monospace,Menlo,monospace">VNO</div><div style="flex:1;height:2px;background:#201e1d;margin:0 7px"></div>
+<div style="font:600 11px/1 'Archivo';font-family:ui-monospace,Menlo,monospace">FRA</div><div style="flex:1;height:2px;background:#201e1d;margin:0 7px"></div>
+<div style="font:600 11px/1 'Archivo';font-family:ui-monospace,Menlo,monospace;color:#ec3013">NRT</div><div style="flex:1;height:2px;background:#201e1d;margin:0 7px"></div>
+<div style="font:600 11px/1 'Archivo';font-family:ui-monospace,Menlo,monospace">FRA</div><div style="flex:1;height:2px;background:#201e1d;margin:0 7px"></div>
+<div style="font:600 11px/1 'Archivo';font-family:ui-monospace,Menlo,monospace">VNO</div>
+</div>
+</div>
+<div style="padding:16px 0;border-bottom:1px solid rgba(32,30,29,.3)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:700 15px/1.2 'Archivo'">Vilnius → Barcelona → Vilnius</div><div style="font:600 11px/1 'Archivo';color:rgba(32,30,29,.55)">3–9 May · 2 flights</div></div>
+<div style="display:flex;align-items:center;margin-top:12px"><div style="font:600 11px/1 'Archivo';font-family:ui-monospace,Menlo,monospace">VNO</div><div style="flex:1;height:2px;background:#201e1d;margin:0 7px"></div><div style="font:600 11px/1 'Archivo';font-family:ui-monospace,Menlo,monospace;color:#ec3013">BCN</div><div style="flex:1;height:2px;background:#201e1d;margin:0 7px"></div><div style="font:600 11px/1 'Archivo';font-family:ui-monospace,Menlo,monospace">VNO</div></div>
+</div>
+<div style="padding:16px 0;border-bottom:1px solid rgba(32,30,29,.3);background:#eae7e7;padding-left:12px;padding-right:12px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:700 15px/1.2 'Archivo';color:rgba(32,30,29,.6)">Unassigned flight — LHR → DUB</div><div style="padding:4px 8px;border:1px solid #ec3013;color:#ec3013;font:700 9.5px/1 'Archivo';letter-spacing:.08em;text-transform:uppercase">Needs review</div></div>
+<div style="font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.6);margin-top:8px">No return leg found and a 9-day gap either side — we didn't guess. Assign to a trip?</div>
+</div>
+<div style="padding:16px 0;border-bottom:1px solid rgba(32,30,29,.3)"><div style="width:280px;height:12px;background:#d7d3d3"></div><div style="width:180px;height:8px;background:#d7d3d3;margin-top:10px"></div></div>
+<div style="padding:16px 0"><div style="width:230px;height:12px;background:#d7d3d3"></div><div style="width:210px;height:8px;background:#d7d3d3;margin-top:10px"></div></div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none">
+<span style="position:absolute;right:-11px;top:150px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">1</span>
+<span style="position:absolute;left:-11px;top:334px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">2</span>
+</div></sc-if>
+</div>
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="width:760px;display:flex;flex-direction:column;gap:7px;padding-top:4px">
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">1</span><span>Trips are derived, so the row shows the derivation: the airport chain with the destination in red. Users audit the reconstruction by glancing at it.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">2</span><span>The important state: clustering declined to guess. Ambiguous flights surface as a reviewable row instead of being forced into a trip — this is where §19's "LLM only for ambiguous cases" becomes UI, and every resolution is a labelled eval example.</span></div>
+</div></sc-if>
+</div>
+
+<div class="dv-opt" id="1h"><div class="dv-olabel"><a class="dv-oid" href="#1h">1h</a>Flight detail + view source</div>
+<div class="dv-card" style="width:900px;position:relative">
+<div style="padding:14px 24px;border-bottom:2px solid #201e1d;display:flex;justify-content:space-between;align-items:center"><div style="font:600 12px/1 'Archivo';color:rgba(32,30,29,.6)">← Back to flights</div><div style="width:22px;height:22px;background:#d7d3d3"></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr">
+<div style="padding:26px 24px;border-right:2px solid #201e1d">
+<div style="display:flex;align-items:baseline;gap:12px"><div style="font:800 30px/1 'Archivo';letter-spacing:-.02em">FRA → NRT</div><div style="padding:4px 8px;background:#201e1d;color:#f3f2f2;font:700 9.5px/1 'Archivo';letter-spacing:.08em">LH 710</div></div>
+<div style="font:500 13px/1 'Archivo';color:rgba(32,30,29,.6);margin-top:10px">14 Jun 2025 · 9,355 km · Lufthansa</div>
+<div style="margin-top:22px;border-top:2px solid #201e1d">
+<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);font:500 12px/1 'Archivo'"><span style="color:rgba(32,30,29,.6)">Departs</span><span style="font-weight:600">17:05 CEST · FRA T1</span></div>
+<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);font:500 12px/1 'Archivo'"><span style="color:rgba(32,30,29,.6)">Arrives</span><span style="font-weight:600">11:40 JST +1</span></div>
+<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);font:500 12px/1 'Archivo'"><span style="color:rgba(32,30,29,.6)">Booking ref</span><span style="font-family:ui-monospace,Menlo,monospace;font-weight:600">7QK4RB</span></div>
+<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);font:500 12px/1 'Archivo'"><span style="color:rgba(32,30,29,.6)">Price</span><span style="font-weight:600">€642.00</span></div>
+<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(32,30,29,.25);font:500 12px/1 'Archivo'"><span style="color:rgba(32,30,29,.6)">Seat</span><span style="color:rgba(32,30,29,.45)">not found in source</span></div>
+</div>
+<div style="margin-top:22px;background:#eae7e7;border-left:2px solid #ec3013;padding:14px 16px">
+<div style="font:700 9.5px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:#ec3013;margin-bottom:11px">Provenance</div>
+<div style="display:flex;flex-direction:column;gap:7px;font:500 11px/1.3 'Archivo';font-family:ui-monospace,Menlo,monospace">
+<div style="display:flex;justify-content:space-between"><span style="color:rgba(32,30,29,.6)">source_email_id</span><span>gmail_abc123</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:rgba(32,30,29,.6)">extraction_version</span><span>3</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:rgba(32,30,29,.6)">confidence</span><span style="color:#ec3013;font-weight:700">0.98</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:rgba(32,30,29,.6)">merged_from</span><span>3 emails</span></div>
+</div>
+</div>
+<div style="display:flex;gap:10px;margin-top:20px"><div style="padding:11px 15px;border:1px solid rgba(32,30,29,.4);font:600 12px/1 'Archivo'">Correct this flight</div><div style="padding:11px 15px;border:1px solid rgba(32,30,29,.4);font:600 12px/1 'Archivo'">Not a flight</div></div>
+</div>
+<div style="padding:26px 24px;background:#eae9e9">
+<div style="font:700 9.5px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:14px">Source email · 1 of 3</div>
+<div style="background:#f3f2f2;border:1px solid rgba(32,30,29,.3);padding:16px">
+<div style="font:700 12px/1.3 'Archivo'">Your Lufthansa booking confirmation</div>
+<div style="font:500 10.5px/1 'Archivo';color:rgba(32,30,29,.55);margin-top:6px">noreply@lufthansa.com · 2 Apr 2025</div>
+<div style="border-top:1px solid rgba(32,30,29,.2);margin-top:12px;padding-top:12px;display:flex;flex-direction:column;gap:8px">
+<div style="width:100%;height:7px;background:#d7d3d3"></div><div style="width:88%;height:7px;background:#d7d3d3"></div>
+<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><div style="padding:3px 6px;background:#ffe0d9;border:1px solid #ec3013;font:700 10px/1.2 'Archivo';font-family:ui-monospace,Menlo,monospace">LH 710</div><div style="padding:3px 6px;background:#ffe0d9;border:1px solid #ec3013;font:700 10px/1.2 'Archivo';font-family:ui-monospace,Menlo,monospace">FRA</div><div style="padding:3px 6px;background:#ffe0d9;border:1px solid #ec3013;font:700 10px/1.2 'Archivo';font-family:ui-monospace,Menlo,monospace">NRT</div></div>
+<div style="width:94%;height:7px;background:#d7d3d3"></div><div style="width:70%;height:7px;background:#d7d3d3"></div>
+<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><div style="padding:3px 6px;background:#ffe0d9;border:1px solid #ec3013;font:700 10px/1.2 'Archivo';font-family:ui-monospace,Menlo,monospace">14 JUN 17:05</div><div style="padding:3px 6px;background:#ffe0d9;border:1px solid #ec3013;font:700 10px/1.2 'Archivo';font-family:ui-monospace,Menlo,monospace">€642.00</div></div>
+<div style="width:82%;height:7px;background:#d7d3d3"></div><div style="width:60%;height:7px;background:#d7d3d3"></div>
+</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:14px">
+<div style="padding:8px 11px;background:#201e1d;color:#f3f2f2;font:600 11px/1 'Archivo'">Confirmation</div>
+<div style="padding:8px 11px;border:1px solid rgba(32,30,29,.4);font:600 11px/1 'Archivo';color:rgba(32,30,29,.6)">Receipt</div>
+<div style="padding:8px 11px;border:1px solid rgba(32,30,29,.4);font:600 11px/1 'Archivo';color:rgba(32,30,29,.6)">Check-in</div>
+</div>
+<div style="font:400 11px/1.5 'Archivo';color:rgba(32,30,29,.6);margin-top:14px">Fetched live from Gmail. We don't keep the body — close this and it's gone.</div>
+</div>
+</div>
+<sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;pointer-events:none">
+<span style="position:absolute;left:-11px;top:330px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">1</span>
+<span style="position:absolute;left:-11px;top:440px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">2</span>
+<span style="position:absolute;right:-11px;top:250px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">3</span>
+<span style="position:absolute;right:-11px;top:560px;width:20px;height:20px;background:#ec3013;color:#fff;font:700 11px/20px 'Archivo';text-align:center">4</span>
+</div></sc-if>
+</div>
+<sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="width:900px;display:flex;flex-direction:column;gap:7px;padding-top:4px">
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">1</span><span>"not found in source" instead of an empty row or a guess — the AI rules (§13) made visible. Absence is information.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">2</span><span>Provenance block ships in the MVP, not later. <code>merged_from: 3 emails</code> is the dedupe result stated plainly — it's the single best proof that the product isn't double-counting.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">3</span><span>Extracted values highlighted in the source email — the "why did you think this" answer, no reading required. Highlighting needs char offsets stored with the extraction, or a re-match on fetch; the second is cheaper and good enough.</span></div>
+<div style="display:flex;gap:9px;font:400 11.5px/1.5 'Archivo';color:rgba(32,30,29,.68)"><span style="flex:none;width:16px;height:16px;background:#201e1d;color:#f3f2f2;font:700 9px/16px 'Archivo';text-align:center">4</span><span>Body is fetched on demand with the stored <code>gmail_message_id</code> and never persisted (§31), and the screen says so. "Correct this flight" / "Not a flight" feed the eval dataset.</span></div>
+</div></sc-if>
+</div>
+
+<div class="dv-opt" id="1i"><div class="dv-olabel"><a class="dv-oid" href="#1i">1i</a>Mobile — reveal</div>
+<div class="dv-card" style="width:340px;position:relative">
+<div style="padding:12px 16px;border-bottom:2px solid #201e1d;display:flex;justify-content:space-between;align-items:center"><div style="font:800 12px/1 'Archivo'">TRAILHEAD</div><div style="width:18px;height:18px;background:#d7d3d3"></div></div>
+<div style="padding:22px 16px 26px;border-bottom:2px dashed rgba(32,30,29,.4)">
+<div style="font:600 11px/1 'Archivo';letter-spacing:.18em;color:rgba(32,30,29,.6)">2019 → 2026</div>
+<div style="font:800 88px/.9 'Archivo';letter-spacing:-.045em;margin-top:8px">132</div>
+<div style="font:700 18px/1 'Archivo';margin-top:2px">flights</div>
+<div style="font:400 13px/1.5 'Archivo';color:rgba(32,30,29,.65);margin-top:14px">You've been in the air for 16 days, 4 hours.</div>
+</div>
+<div style="padding:20px 16px">
+<div style="border-top:2px solid #201e1d">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 12px/1 'Archivo';letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.6)">Countries</div><div style="font:800 28px/1 'Archivo'">47</div></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 12px/1 'Archivo';letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.6)">Airports</div><div style="font:800 28px/1 'Archivo'">91</div></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 12px/1 'Archivo';letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.6)">Km</div><div style="font:800 28px/1 'Archivo';color:#ec3013">312,482</div></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:2px solid #201e1d"><div style="font:700 12px/1 'Archivo';letter-spacing:.06em;text-transform:uppercase;color:rgba(32,30,29,.6)">Airlines</div><div style="font:800 28px/1 'Archivo'">14</div></div>
+</div>
+<div style="height:180px;margin-top:20px;background-color:#eae7e7;background-image:linear-gradient(to top right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px)),linear-gradient(to bottom right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px));border:1px solid rgba(32,30,29,.3)"></div>
+<div style="margin-top:16px;padding:13px 16px;background:#ec3013;color:#f3f2f2;font:600 13px/1 'Archivo'">Open my dashboard</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1j"><div class="dv-olabel"><a class="dv-oid" href="#1j">1j</a>Mobile — dashboard</div>
+<div class="dv-card" style="width:340px;position:relative">
+<div style="padding:12px 16px;border-bottom:2px solid #201e1d;display:flex;justify-content:space-between;align-items:center"><div style="font:800 12px/1 'Archivo'">TRAILHEAD</div><div style="display:flex;border:1px solid rgba(32,30,29,.4);font:600 10px/1 'Archivo'"><span style="padding:6px 9px;background:#ec3013;color:#f3f2f2">All</span><span style="padding:6px 9px;border-left:1px solid rgba(32,30,29,.4)">2026</span></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid #201e1d">
+<div style="padding:16px;border-right:1px solid rgba(32,30,29,.3);border-bottom:1px solid rgba(32,30,29,.3)"><div style="font:800 28px/1 'Archivo'">132</div><div style="font:600 9.5px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:7px">Flights</div></div>
+<div style="padding:16px;border-bottom:1px solid rgba(32,30,29,.3)"><div style="font:800 28px/1 'Archivo'">47</div><div style="font:600 9.5px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:7px">Countries</div></div>
+<div style="padding:16px;border-right:1px solid rgba(32,30,29,.3)"><div style="font:800 28px/1 'Archivo'">91</div><div style="font:600 9.5px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:7px">Airports</div></div>
+<div style="padding:16px"><div style="font:800 28px/1 'Archivo'">312k</div><div style="font:600 9.5px/1 'Archivo';letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-top:7px">Km</div></div>
+</div>
+<div style="height:200px;background-color:#eae7e7;background-image:linear-gradient(to top right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px)),linear-gradient(to bottom right,transparent calc(50% - 1px),#c9c5c5,transparent calc(50% + 1px));border-bottom:2px solid #201e1d"></div>
+<div style="padding:16px">
+<div style="font:600 9.5px/1 'Archivo';letter-spacing:.12em;text-transform:uppercase;color:rgba(32,30,29,.55);margin-bottom:12px">Recent trips</div>
+<div style="border-top:1px solid rgba(32,30,29,.25)">
+<div style="padding:11px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 12px/1.2 'Archivo'">Vilnius → Tokyo</div><div style="font:500 10.5px/1 'Archivo';color:rgba(32,30,29,.55);margin-top:5px">12–24 Jun · 4 flights</div></div>
+<div style="padding:11px 0;border-bottom:1px solid rgba(32,30,29,.25)"><div style="font:700 12px/1.2 'Archivo'">Vilnius → Barcelona</div><div style="font:500 10.5px/1 'Archivo';color:rgba(32,30,29,.55);margin-top:5px">3–9 May · 2 flights</div></div>
+<div style="padding:11px 0"><div style="width:150px;height:9px;background:#d7d3d3"></div><div style="width:110px;height:7px;background:#d7d3d3;margin-top:7px"></div></div>
+</div>
+</div>
+<div style="border-top:2px solid #201e1d;display:flex;justify-content:space-between;padding:12px 16px"><div style="width:40px;height:8px;background:#201e1d"></div><div style="width:40px;height:8px;background:#d7d3d3"></div><div style="width:40px;height:8px;background:#d7d3d3"></div><div style="width:40px;height:8px;background:#d7d3d3"></div></div>
+</div>
+</div>
+
+</div>
+
+<p class="dv-next">Try next: "take <a class="dv-oid" href="#1d">1d</a> to hi-fi in both looks" · "the reveal should be 4 stops, add spend" · "add the empty state and the settings/delete screen"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Annotations&quot;},&quot;showCallouts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Annotations&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      showNotes: this.props.showNotes ?? true,
+      showCallouts: this.props.showCallouts ?? true,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
