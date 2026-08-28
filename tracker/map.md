@@ -105,6 +105,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   layout — running on the real 102-flight history. Chain ordering,
   destination-by-distance, and the PostgREST 1000-row cap fixed; extraction
   quality findings captured for the eval dataset.
+- [M4 map](tickets/019-m4-map.md): monochrome MapLibre map tab with
+  great-circle routes, activity-sized airports, year + airline filters and
+  restating footer counts; static inline-SVG landing teaser (no live map on
+  the marketing page). MapLibre v6's module worker had to be self-hosted for
+  Next dev to serve it.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
