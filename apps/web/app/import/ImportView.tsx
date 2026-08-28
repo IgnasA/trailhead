@@ -50,7 +50,10 @@ const STAGE_LABELS: [string, (c: Record<string, number>) => string][] = [
   ["connect", () => "Connected to Gmail"],
   ["search", (c) => c.candidates != null ? `Searched mailbox — ${c.candidates.toLocaleString()} candidates` : "Searching mailbox"],
   ["skip_cached", (c) => c.cached_skipped != null ? `${c.cached_skipped.toLocaleString()} cached, skipped` : "Checking cache"],
-  ["extract", (c) => `Extracting flights — ${(c.processed ?? 0).toLocaleString()} / ${(((c.candidates ?? 0) - (c.cached_skipped ?? 0))).toLocaleString()}`],
+  ["extract", (c) =>
+    c.batch_waiting
+      ? `Reading ${(c.llm_candidates ?? 0).toLocaleString()} likely flight emails — queued`
+      : `Extracting flights — ${(c.processed ?? 0).toLocaleString()} / ${(((c.candidates ?? 0) - (c.cached_skipped ?? 0))).toLocaleString()}`],
   ["deduplicate", () => "Deduplicating"],
   ["reconstruct_trips", () => "Reconstructing trips"],
   ["build_history", () => "Building your history"],
@@ -144,6 +147,13 @@ export function ImportView({ initialJob }: { initialJob: JobRow }) {
             {(c.failures ?? 0) > 0 && `${c.failures} email${c.failures === 1 ? "" : "s"} could not be parsed — we'll show you which`}
           </span>
         </div>
+        {c.batch_waiting ? (
+          <p style={{ marginTop: 14, fontSize: 12.5, maxWidth: "34em" }} className="text-muted">
+            The likely flight emails are queued for reading in one batch, which
+            costs half as much as reading them one by one. This is the slow
+            part — you can close the tab and we&rsquo;ll email you.
+          </p>
+        ) : null}
         {c.extraction_degraded ? (
           <div style={{ marginTop: 18, padding: "12px 14px", borderLeft: "2px solid var(--color-accent)", background: "var(--color-accent-100)" }}>
             <div style={{ font: "700 10px/1 var(--font-body)", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--color-accent-700)", marginBottom: 8 }}>
@@ -161,7 +171,14 @@ export function ImportView({ initialJob }: { initialJob: JobRow }) {
         ) : null}
         {done && (
           <div style={{ display: "flex", gap: 14, marginTop: 22, borderTop: "2px solid var(--color-text)", paddingTop: 20, alignItems: "center" }}>
-            {c.extraction_degraded ? (
+            {c.batch_waiting ? (
+          <p style={{ marginTop: 14, fontSize: 12.5, maxWidth: "34em" }} className="text-muted">
+            The likely flight emails are queued for reading in one batch, which
+            costs half as much as reading them one by one. This is the slow
+            part — you can close the tab and we&rsquo;ll email you.
+          </p>
+        ) : null}
+        {c.extraction_degraded ? (
               <StartImport label="Run the rest" />
             ) : (
               <Link href="/reveal" className="btn btn-primary">See my travel history</Link>

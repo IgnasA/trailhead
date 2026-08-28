@@ -78,6 +78,106 @@ interface LlmResult {
   outputTokens: number;
 }
 
+export interface BatchItem {
+  id: string;          // custom_id — the Gmail message id
+  subject: string;
+  from: string;
+  body: string;
+}
+
+const MODEL = "claude-haiku-4-5";
+
+function requestParams(item: BatchItem) {
+  return {
+    model: MODEL,
+    max_tokens: 2048,
+    system: SYSTEM,
+    tools: [EXTRACTION_TOOL],
+    tool_choice: { type: "tool" as const, name: "record_flight_extraction" },
+    messages: [
+      {
+        role: "user" as const,
+        content: `From: ${item.from}\nSubject: ${item.subject}\n\n${item.body}`,
+      },
+    ],
+  };
+}
+
+/** Turn one tool_use result into validated segments. Shared by both paths. */
+function parseToolUse(input: unknown, emailTypeFallback = "unknown"): FlightExtraction[] {
+  const raw = input as { isFlightEmail?: boolean; emailType?: string; flights?: unknown[] };
+  if (!raw?.isFlightEmail) return [];
+  const out: FlightExtraction[] = [];
+  for (const segment of raw.flights ?? []) {
+    const parsed = FlightExtractionSchema.safeParse({
+      ...(segment as object),
+      isFlightEmail: true,
+      emailType: raw.emailType ?? emailTypeFallback,
+    });
+    if (parsed.success) out.push(parsed.data);
+  }
+  return out;
+}
+
+export interface BatchOutcome {
+  results: Map<string, FlightExtraction[]>;
+  failed: string[];
+  inputTokens: number;
+  outputTokens: number;
+}
+
+/** Submit every candidate as one Message Batch — half the per-token price of
+ *  the synchronous path (brief §28). Returns the batch id immediately so the
+ *  job can record it and survive a worker restart. */
+export async function submitBatch(items: BatchItem[]): Promise<string> {
+  try {
+    const batch = await client.messages.batches.create({
+      requests: items.map((item) => ({
+        custom_id: item.id,
+        params: requestParams(item),
+      })),
+    });
+    return batch.id;
+  } catch (err) {
+    if (err instanceof Anthropic.AuthenticationError) {
+      throw new LlmUnavailableError("auth", "Anthropic API key rejected");
+    }
+    if (err instanceof Anthropic.BadRequestError && /credit balance/i.test(err.message)) {
+      throw new LlmUnavailableError("no_credit", "Anthropic account has no credit");
+    }
+    throw err;
+  }
+}
+
+/** Poll once. Returns null while the batch is still processing. */
+export async function collectBatch(batchId: string): Promise<BatchOutcome | null> {
+  const batch = await client.messages.batches.retrieve(batchId);
+  if (batch.processing_status !== "ended") return null;
+
+  const outcome: BatchOutcome = {
+    results: new Map(), failed: [], inputTokens: 0, outputTokens: 0,
+  };
+  // Results arrive in any order — key by custom_id, never by position.
+  for await (const entry of await client.messages.batches.results(batchId)) {
+    if (entry.result.type !== "succeeded") {
+      outcome.failed.push(entry.custom_id);
+      continue;
+    }
+    const message = entry.result.message;
+    outcome.inputTokens += message.usage.input_tokens;
+    outcome.outputTokens += message.usage.output_tokens;
+    const toolUse = message.content.find(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
+    );
+    if (!toolUse) {
+      outcome.failed.push(entry.custom_id);
+      continue;
+    }
+    outcome.results.set(entry.custom_id, parseToolUse(toolUse.input));
+  }
+  return outcome;
+}
+
 export async function llmExtract(
   subject: string,
   from: string,
@@ -85,19 +185,7 @@ export async function llmExtract(
 ): Promise<LlmResult | null> {
   let response: Anthropic.Message;
   try {
-    response = await client.messages.create({
-      model: "claude-haiku-4-5",
-      max_tokens: 2048,
-      system: SYSTEM,
-      tools: [EXTRACTION_TOOL],
-      tool_choice: { type: "tool", name: "record_flight_extraction" },
-      messages: [
-        {
-          role: "user",
-          content: `From: ${from}\nSubject: ${subject}\n\n${body.slice(0, 30000)}`,
-        },
-      ],
-    });
+    response = await client.messages.create(requestParams({ id: "", subject, from, body }));
   } catch (err) {
     if (err instanceof Anthropic.AuthenticationError) {
       throw new LlmUnavailableError("auth", "Anthropic API key rejected");
@@ -114,21 +202,5 @@ export async function llmExtract(
   );
   if (!toolUse) return null;
 
-  const raw = toolUse.input as {
-    isFlightEmail?: boolean;
-    emailType?: string;
-    flights?: unknown[];
-  };
-  if (!raw.isFlightEmail) return { extractions: [], ...usage };
-
-  const extractions: FlightExtraction[] = [];
-  for (const segment of raw.flights ?? []) {
-    const parsed = FlightExtractionSchema.safeParse({
-      ...(segment as object),
-      isFlightEmail: true,
-      emailType: raw.emailType ?? "unknown",
-    });
-    if (parsed.success) extractions.push(parsed.data);
-  }
-  return { extractions, ...usage };
+  return { extractions: parseToolUse(toolUse.input), ...usage };
 }

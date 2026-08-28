@@ -67,6 +67,17 @@ async function gget<T>(accessToken: string, path: string): Promise<T> {
   }
 }
 
+/** Candidate count for the plan step. Gmail's own `resultSizeEstimate` is
+ *  badly inaccurate on large result sets — it reported 201 for a mailbox with
+ *  740 matches — so this counts ids properly. Still cheap: id pages are 5
+ *  quota units each and hold 500 ids, and no message bodies are fetched. */
+export async function countCandidates(
+  accessToken: string,
+  query: string,
+): Promise<number> {
+  return (await listAllMessageIds(accessToken, query)).length;
+}
+
 export async function listAllMessageIds(
   accessToken: string,
   query: string,

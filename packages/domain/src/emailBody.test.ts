@@ -55,6 +55,6 @@ describe("bodyForExtraction", () => {
   });
 
   it("caps enormous emails", () => {
-    expect(bodyForExtraction("x".repeat(50000), "", 12000)).toHaveLength(12000);
+    expect(bodyForExtraction("x".repeat(50000), "")).toHaveLength(6000);
   });
 });
