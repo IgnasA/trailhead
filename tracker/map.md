@@ -90,6 +90,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   verdict = free flow (reveal-once on scroll entry, eased count-ups, route
   draw-in; no scroll-snap or hijack). Primary source on branch
   `prototype/reveal`.
+- [M0 scaffold](tickets/015-m0-scaffold.md): monorepo (domain/web/worker)
+  typechecking and tested; schema applied to Supabase (11 tables, RLS);
+  reference-data vendoring working (9,054 airports / 993 airlines); CI live;
+  styling = plain Modernist CSS (fog item resolved). Leftovers: Fly app
+  creation + DB seeding, both needing user credentials.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
@@ -115,11 +120,8 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 ## Not yet specified
 
-- **Styling approach for M0/M1** — the brief (§6) recommends Tailwind +
-  shadcn/ui, but the Modernist design system (plain CSS tokens, 0 radius,
-  2px rules) is the design authority and clashes with shadcn defaults;
-  decide when scaffolding: plain Modernist CSS, Tailwind themed to the
-  tokens, or a mix.
+_Nothing — remaining work is build milestones M1–M6 (see the
+[Build plan](tickets/014-build-plan.md))._
 
 ## Out of scope
 

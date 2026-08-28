@@ -3,8 +3,7 @@
 -- Vocabulary: see CONTEXT.md. Posture: users read their own rows via RLS;
 -- all writes go through the server/worker (service role) so invariants hold.
 
--- ── Reference data (public: RLS with world-read policy, service-role writes —
---    see migration 00000000000002) ──────────────────────────────────────────
+-- ── Reference data (public, no RLS) ─────────────────────────────────────────
 
 create table airports (
   iata          text primary key check (iata ~ '^[A-Z]{3}$'),
