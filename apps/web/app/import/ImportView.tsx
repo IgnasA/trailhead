@@ -164,12 +164,10 @@ export function ImportView({ initialJob }: { initialJob: JobRow }) {
             {c.extraction_degraded ? (
               <StartImport label="Run the rest" />
             ) : (
-              <button className="btn btn-primary" disabled title="The dashboard ships in M3">
-                Open my dashboard
-              </button>
+              <Link href="/reveal" className="btn btn-primary">See my travel history</Link>
             )}
             <span style={{ fontSize: 12 }} className="text-muted">
-              {c.extraction_degraded ? "Resumes with the skipped emails" : "Dashboard lands in M3"}
+              {c.extraction_degraded ? "Resumes with the skipped emails" : "Then your dashboard"}
             </span>
           </div>
         )}
@@ -192,7 +190,7 @@ export function ImportView({ initialJob }: { initialJob: JobRow }) {
         </div>
         <p style={{ marginTop: 18, fontSize: 11.5 }} className="text-muted">
           {done
-            ? "The reveal and dashboard arrive in the next milestones."
+            ? "Your history is ready to look at."
             : "You can close this tab. We'll email you when it's done."}
         </p>
       </div>

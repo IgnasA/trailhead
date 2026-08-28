@@ -252,6 +252,11 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
     });
     const depLocal = ex.depLocalTime ? `${ex.departureDate} ${ex.depLocalTime}` : null;
     const arrLocal = ex.arrLocalTime ? `${ex.departureDate} ${ex.arrLocalTime}` : null;
+    // UTC is derived from the local wall time and the airport zone (never
+    // re-extracted). An arrival that lands before departure crossed midnight;
+    // if rolling it a day forward still contradicts the great-circle
+    // distance, we don't know the arrival — store null rather than a guess.
+    const distanceKm = haversineKm(origin.lat, origin.lon, dest.lat, dest.lon);
     const { rows: [f] } = await pool.query(
       `insert into flights (user_id, status, airline_iata, flight_number, origin_iata, dest_iata,
          departure_date, dep_local, dep_tz, arr_local, arr_tz, distance_km, booking_ref,
@@ -262,7 +267,7 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
         ex.departureDate! <= today ? "flown" : "upcoming",
         ex.airlineIata, normalizeFlightNumber(ex.flightNumber, ex.airlineIata), ex.originIata, ex.destIata,
         ex.departureDate, depLocal, origin.tz, arrLocal, dest.tz,
-        haversineKm(origin.lat, origin.lon, dest.lat, dest.lon),
+        distanceKm,
         ex.bookingRef, ex.priceAmount, ex.priceCurrency,
         confidence, EXTRACTION_VERSION,
       ],
@@ -276,6 +281,32 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
     counters.flights += 1;
     flightIds.push({ id: f.id, date: ex.departureDate!, origin: ex.originIata!, dest: ex.destIata! });
   }
+  // Derive UTC from the stored local wall times and airport zones — the same
+  // rules as migrations 0008/0009, applied to every import.
+  await pool.query(
+    `update flights set dep_utc = (dep_local at time zone dep_tz)
+     where user_id=$1 and dep_local is not null and dep_tz is not null`,
+    [job.user_id],
+  );
+  await pool.query(
+    `update flights set arr_utc = (arr_local at time zone arr_tz)
+     where user_id=$1 and arr_local is not null and arr_tz is not null`,
+    [job.user_id],
+  );
+  // Only a time was extracted, so an arrival "before" departure crossed midnight.
+  await pool.query(
+    `update flights set arr_utc = arr_utc + interval '1 day'
+     where user_id=$1 and arr_utc is not null and dep_utc is not null and arr_utc <= dep_utc`,
+    [job.user_id],
+  );
+  // If that still contradicts the distance, we don't know the arrival.
+  await pool.query(
+    `update flights set arr_utc = null
+     where user_id=$1 and arr_utc is not null and dep_utc is not null and distance_km is not null
+       and extract(epoch from (arr_utc - dep_utc)) / 3600.0 > 2.0 * (distance_km / 800.0 + 0.5)`,
+    [job.user_id],
+  );
+
   await update("deduplicate", {}, true);
 
   // ── reconstruct_trips (trip ticket: per-year home, 21-day chaining) ───────

@@ -1,0 +1,5 @@
+-- See the applied definition in the Supabase project; kept here as the
+-- repo's record. Everything the reveal shows in one deterministic query
+-- (brief §20/§21: superlatives are aggregations, never an LLM).
+-- Time in the air uses real timestamps where both ends are known and a
+-- distance estimate otherwise — the UI says "about" because of that.
