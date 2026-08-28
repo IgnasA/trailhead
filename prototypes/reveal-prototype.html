@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+  PROTOTYPE — throwaway. Answers tracker/tickets/012-reveal-scroll-story-prototype.md:
+  does the three-stop reveal choreography (wireframe 1d/1i) feel like the magic moment?
+  Three variants of the same content, radically different scroll behavior:
+    ?variant=A  "Free flow"  — long scroll, elements reveal + count up once on entry
+    ?variant=B  "Hard stops" — scroll-snap: three full-screen stops, slide-like
+    ?variant=C  "Scrub"      — sticky stage, scroll position drives every animation
+  Switch with the floating bar or ← / → keys. Not production code.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reveal prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f2f2; --ink:#201e1d; --red:#ec3013; --grey:#d7d3d3;
+    --muted:rgba(32,30,29,.6); --rule:rgba(32,30,29,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Archivo",system-ui,sans-serif}
+  .col{max-width:820px;margin:0 auto;padding:0 28px}
+  .kicker{font:600 11px/1 "Archivo";letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .years{font:600 13px/1 "Archivo";letter-spacing:.2em;color:var(--muted)}
+  .huge{font-weight:800;font-size:clamp(88px,16vw,132px);line-height:.86;letter-spacing:-.045em}
+  .huge-unit{font:700 26px/1 "Archivo"}
+  .subline{font:400 15px/1.5 "Archivo";color:rgba(32,30,29,.65);max-width:26em}
+  .scrollcue{font:600 11px/1 "Archivo";letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+  .stack{border-top:2px solid var(--ink)}
+  .row{display:flex;align-items:baseline;justify-content:space-between;
+    padding:14px 0;border-bottom:1px solid var(--rule)}
+  .row:last-child{border-bottom:2px solid var(--ink)}
+  .row .label{font:700 15px/1 "Archivo";letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .row .val{font-weight:800;font-size:clamp(28px,6vw,44px);line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .row.red .val{color:var(--red)}
+  .supers{display:grid;grid-template-columns:repeat(4,1fr);margin-top:26px;border-top:1px solid var(--rule)}
+  @media (max-width:640px){.supers{grid-template-columns:repeat(2,1fr)}}
+  .super{padding:14px 12px 4px 0;border-right:1px solid var(--rule)}
+  .super:last-child{border-right:0}
+  .super h4{margin:0;font:600 9.5px/1.3 "Archivo";letter-spacing:.1em;text-transform:uppercase;color:rgba(32,30,29,.5)}
+  .super .big{font:700 16px/1.2 "Archivo";margin-top:7px}
+  .super .small{font:400 11px/1 "Archivo";color:var(--muted);margin-top:4px}
+  .exits{display:flex;align-items:center;gap:14px;border-top:2px solid var(--ink);padding-top:20px;margin-top:22px}
+  .btn{padding:13px 18px;font:600 13px/1 "Archivo";cursor:pointer;border:0;text-align:left}
+  .btn.primary{background:var(--red);color:#f3f2f2}
+  .btn.secondary{background:transparent;color:var(--ink);border:1px solid rgba(32,30,29,.4)}
+  .mapwrap{border:1px solid rgba(32,30,29,.3);background:#eae7e7}
+  .mapwrap svg{display:block;width:100%;height:auto}
+  .route{fill:none;stroke:var(--red);stroke-width:1.6}
+  .dot{fill:var(--ink)}
+  .dot.hub{fill:var(--red)}
+  .land{fill:#dedbdb;stroke:#c9c5c5;stroke-width:.5}
+  /* switcher — deliberately alien to the design under evaluation */
+  #switcher{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+    display:flex;align-items:center;gap:2px;background:#111;color:#fff;
+    border-radius:999px;padding:6px 8px;font:600 12px/1 ui-monospace,monospace;
+    box-shadow:0 6px 24px rgba(0,0,0,.35);z-index:99;user-select:none}
+  #switcher button{background:none;border:0;color:#fff;font:inherit;cursor:pointer;padding:6px 10px}
+  #switcher .lbl{padding:0 8px;min-width:170px;text-align:center}
+  .reveal-el{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+  .reveal-el.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="switcher">
+  <button id="prev" aria-label="previous variant">←</button>
+  <span class="lbl" id="lbl"></span>
+  <button id="next" aria-label="next variant">→</button>
+</div>
+
+<script>
+// ── demo data (map Notes: canonical fictional user) ────────────────────────
+const DATA = {
+  years:"2019 → 2026", flights:132, air:"You've been in the air for 16 days, 4 hours.",
+  stack:[["Countries",47],["Airports",91],["Kilometres",312482,"red"],["Airlines",14]],
+  supers:[["Most visited","Italy","7 trips"],["Most used airline","Ryanair","31 flights"],
+          ["Longest flight","VNO → NRT","8,414 km"],["Busiest year","2025","29 flights"]],
+};
+const fmt = n => n.toLocaleString("en-US");
+
+// Equirectangular-ish placeholder world + airports (choreography stand-in;
+// the real map is MapLibre — ticket 007).
+const AIRPORTS = { VNO:[545,118], FRA:[500,128], LHR:[478,120], BCN:[483,152],
+  LIS:[458,158], KEF:[430,86], ATH:[540,160], DXB:[610,190], NRT:[810,160],
+  SIN:[725,238], JFK:[290,150], BKK:[705,215], MXP:[502,145], TLV:[560,172] };
+const ROUTES = [["VNO","FRA"],["FRA","NRT"],["VNO","BCN"],["VNO","LHR"],["FRA","JFK"],
+  ["VNO","MXP"],["VNO","ATH"],["FRA","DXB"],["DXB","SIN"],["VNO","KEF"],["BCN","LIS"],
+  ["FRA","BKK"],["VNO","TLV"]];
+function mapSVG(){
+  const land = `
+    <path class="land" d="M180 90 q60 -30 130 -18 q60 4 80 30 q10 30 -20 45 q-50 20 -60 55 q-8 40 -40 55 q-35 10 -50 -20 q-20 -45 -40 -75 q-18 -45 0 -72 Z"/>
+    <path class="land" d="M300 245 q30 -12 45 8 q16 28 8 70 q-8 45 -30 60 q-22 10 -30 -18 q-10 -50 -8 -80 q2 -30 15 -40 Z"/>
+    <path class="land" d="M430 100 q40 -35 105 -30 q28 0 40 18 q-8 22 -30 30 q22 2 45 12 q30 18 70 15 q60 -8 95 15 q40 22 60 55 q10 30 -15 40 q-40 12 -60 45 q-15 30 -45 22 q-30 -12 -35 -45 q-30 8 -50 -8 q-30 8 -55 -5 q-40 -15 -55 -50 q-30 -10 -45 -35 q-30 -18 -25 -49 Z"/>
+    <path class="land" d="M470 185 q35 -5 55 15 q22 30 15 75 q-8 45 -35 65 q-25 12 -38 -15 q-15 -45 -12 -85 q3 -40 15 -55 Z"/>
+    <path class="land" d="M700 240 q28 -18 55 -5 q25 15 20 45 q-8 30 -35 38 q-28 5 -40 -18 q-12 -35 0 -60 Z"/>
+    <path class="land" d="M770 120 q30 -18 55 -2 q18 15 10 38 q-12 25 -38 25 q-25 -2 -32 -25 q-8 -22 5 -36 Z"/>`;
+  const dots = Object.entries(AIRPORTS).map(([c,[x,y]]) =>
+    `<circle class="dot ${c==='VNO'||c==='FRA'?'hub':''}" cx="${x}" cy="${y}" r="${c==='VNO'?4:2.5}"/>`).join("");
+  const routes = ROUTES.map(([a,b],i)=>{
+    const [x1,y1]=AIRPORTS[a],[x2,y2]=AIRPORTS[b];
+    const mx=(x1+x2)/2, my=Math.min(y1,y2)-Math.max(18,Math.abs(x1-x2)/6);
+    return `<path class="route" data-route d="M${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}"/>`;
+  }).join("");
+  return `<svg viewBox="140 60 720 300" preserveAspectRatio="xMidYMid meet">${land}${routes}${dots}</svg>`;
+}
+
+// ── shared content blocks ──────────────────────────────────────────────────
+const stop1 = `
+  <div class="kicker">Your travel history</div>
+  <div class="years" style="margin-top:34px">${DATA.years}</div>
+  <div style="display:flex;align-items:flex-end;gap:18px;margin-top:6px;flex-wrap:wrap">
+    <div class="huge" data-count data-target="${DATA.flights}">0</div>
+    <div class="huge-unit" style="padding-bottom:14px">flights</div>
+  </div>
+  <div class="subline" style="margin-top:18px">${DATA.air}</div>
+  <div class="scrollcue" style="margin-top:30px">Scroll ↓</div>`;
+const stop2 = `
+  <div class="kicker" style="margin-bottom:24px">The numbers</div>
+  <div class="stack">
+    ${DATA.stack.map(([l,v,red],i)=>`
+    <div class="row ${red||""}" data-row data-i="${i}">
+      <div class="label">${l}</div>
+      <div class="val" data-count data-target="${v}">0</div>
+    </div>`).join("")}
+  </div>
+  <div class="supers">
+    ${DATA.supers.map(([h,b,s])=>`
+    <div class="super"><h4>${h}</h4><div class="big">${b}</div><div class="small">${s}</div></div>`).join("")}
+  </div>`;
+const stop3 = `
+  <div class="kicker" style="margin-bottom:18px">Everywhere, at once</div>
+  <div class="mapwrap">${mapSVG()}</div>
+  <div class="exits">
+    <button class="btn primary">Open my dashboard</button>
+    <button class="btn secondary">Save as image</button>
+  </div>`;
+
+// ── animation helpers ──────────────────────────────────────────────────────
+function countTo(el, p){ // p in [0,1]
+  const t = +el.dataset.target;
+  el.textContent = fmt(Math.round(t * Math.min(1, Math.max(0, p))));
+}
+function playCount(el, ms=1400){
+  const start = performance.now();
+  (function tick(now){
+    const p = (now - start) / ms;
+    countTo(el, 1 - Math.pow(1 - Math.min(p,1), 3));
+    if (p < 1) requestAnimationFrame(tick);
+  })(performance.now());
+}
+function prepRoutes(root){
+  root.querySelectorAll("[data-route]").forEach(r=>{
+    const L = r.getTotalLength();
+    r.style.strokeDasharray = L; r.style.strokeDashoffset = L;
+  });
+}
+function drawRoutes(root, p){ // p in [0,1]; routes draw sequentially
+  const rs = [...root.querySelectorAll("[data-route]")];
+  rs.forEach((r,i)=>{
+    const L = r.getTotalLength();
+    const lp = Math.min(1, Math.max(0, p * rs.length - i));
+    r.style.strokeDashoffset = L * (1 - lp);
+  });
+}
+
+// ── Variant A: Free flow ───────────────────────────────────────────────────
+function variantA(app){
+  app.innerHTML = `
+    <div class="col" style="padding-top:16vh;padding-bottom:20vh">
+      <section class="reveal-el" data-stop="1" style="padding-bottom:18vh;border-bottom:2px dashed rgba(32,30,29,.4)">${stop1}</section>
+      <section class="reveal-el" data-stop="2" style="padding:12vh 0 14vh;border-bottom:2px dashed rgba(32,30,29,.4)">${stop2}</section>
+      <section class="reveal-el" data-stop="3" style="padding-top:12vh">${stop3}</section>
+    </div>`;
+  prepRoutes(app);
+  const io = new IntersectionObserver(es=>es.forEach(e=>{
+    if(!e.isIntersecting) return;
+    e.target.classList.add("in");
+    e.target.querySelectorAll("[data-count]").forEach(c=>playCount(c));
+    if(e.target.dataset.stop==="3"){
+      const s = performance.now();
+      (function tick(n){ const p=(n-s)/1800; drawRoutes(e.target,p); if(p<1) requestAnimationFrame(tick); })(s);
+    }
+    io.unobserve(e.target);
+  }), {threshold:.35});
+  app.querySelectorAll("[data-stop]").forEach(s=>io.observe(s));
+}
+
+// ── Variant B: Hard stops (scroll-snap) ────────────────────────────────────
+function variantB(app){
+  app.innerHTML = `
+    <div id="snap" style="height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory">
+      ${[stop1,stop2,stop3].map((s,i)=>`
+      <section data-stop="${i+1}" style="scroll-snap-align:start;height:100dvh;display:flex;align-items:center;${i<2?'border-bottom:2px solid var(--ink);':''}">
+        <div class="col reveal-el" style="width:100%">${s}</div>
+      </section>`).join("")}
+    </div>`;
+  document.body.style.overflow="hidden";
+  prepRoutes(app);
+  const io = new IntersectionObserver(es=>es.forEach(e=>{
+    if(!e.isIntersecting) return;
+    const inner = e.target.querySelector(".reveal-el");
+    inner.classList.add("in");
+    inner.querySelectorAll("[data-count]").forEach(c=>playCount(c,1100));
+    inner.querySelectorAll("[data-row]").forEach((r,i)=>{
+      r.style.opacity=0; r.style.transform="translateY(18px)";
+      r.style.transition=`opacity .5s ${i*0.12}s, transform .5s ${i*0.12}s cubic-bezier(.2,.8,.2,1)`;
+      requestAnimationFrame(()=>{ r.style.opacity=1; r.style.transform="none"; });
+    });
+    if(e.target.dataset.stop==="3"){
+      const s=performance.now();
+      (function tick(n){ const p=(n-s)/1600; drawRoutes(e.target,p); if(p<1) requestAnimationFrame(tick); })(s);
+    }
+  }), {root:app.querySelector("#snap"), threshold:.6});
+  app.querySelectorAll("[data-stop]").forEach(s=>io.observe(s));
+}
+
+// ── Variant C: Scrub (sticky stage, scroll drives everything) ──────────────
+function variantC(app){
+  app.innerHTML = `
+    <div id="track" style="height:500vh;position:relative">
+      <div style="position:sticky;top:0;height:100dvh;overflow:hidden;display:flex;align-items:center">
+        <div class="col" style="width:100%;position:relative">
+          <div data-scene="1">${stop1.replace('Scroll ↓','Keep scrolling — you drive this one ↓')}</div>
+          <div data-scene="2" style="position:absolute;top:0;bottom:0;left:28px;right:28px;display:flex;flex-direction:column;justify-content:center;opacity:0">${stop2}</div>
+          <div data-scene="3" style="position:absolute;top:0;bottom:0;left:28px;right:28px;display:flex;flex-direction:column;justify-content:center;opacity:0">${stop3}</div>
+        </div>
+      </div>
+    </div>`;
+  prepRoutes(app);
+  const scenes = [1,2,3].map(i=>app.querySelector(`[data-scene="${i}"]`));
+  const seg = (p,a,b)=>Math.min(1,Math.max(0,(p-a)/(b-a)));
+  function render(){
+    const track = app.querySelector("#track");
+    const p = Math.min(1, Math.max(0, -track.getBoundingClientRect().top /
+              (track.offsetHeight - innerHeight)));
+    // scene windows: 0-.3 hook, .3-.65 stack, .65-1 map; short crossfades
+    const w = [seg(p,0,.05)*(1-seg(p,.28,.34)), seg(p,.28,.34)*(1-seg(p,.62,.68)), seg(p,.62,.68)];
+    scenes.forEach((s,i)=>{ s.style.opacity=w[i]; s.style.pointerEvents = w[i]>.5?"auto":"none"; });
+    countTo(scenes[0].querySelector("[data-count]"), seg(p,.02,.24));
+    scenes[1].querySelectorAll("[data-row]").forEach((r,i)=>{
+      const rp = seg(p,.34+i*.06,.40+i*.06);
+      r.style.opacity = rp; r.style.transform = `translateY(${(1-rp)*24}px)`;
+      countTo(r.querySelector("[data-count]"), rp);
+    });
+    drawRoutes(scenes[2], seg(p,.68,.94));
+  }
+  addEventListener("scroll", render, {passive:true}); render();
+}
+
+// ── switcher ───────────────────────────────────────────────────────────────
+const VARIANTS = [["A","Free flow",variantA],["B","Hard stops",variantB],["C","Scrub",variantC]];
+function current(){ const v = window.__variant || new URLSearchParams(location.search).get("variant") || "A";
+  return Math.max(0, VARIANTS.findIndex(x=>x[0]===v)); }
+function mount(i){
+  const [key,name,fn] = VARIANTS[(i+VARIANTS.length)%VARIANTS.length];
+  document.body.style.overflow=""; scrollTo(0,0);
+  const app = document.getElementById("app"); app.innerHTML="";
+  try { history.replaceState(null,"",`?variant=${key}`); } catch(_) { window.__variant = key; }
+  document.getElementById("lbl").textContent = `${key} · ${name}`;
+  fn(app);
+}
+document.getElementById("prev").onclick = ()=>mount(current()-1);
+document.getElementById("next").onclick = ()=>mount(current()+1);
+addEventListener("keydown", e=>{
+  if(/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+  if(e.key==="ArrowLeft") mount(current()-1);
+  if(e.key==="ArrowRight") mount(current()+1);
+});
+mount(current());
+</script>
+</body>
+</html>
