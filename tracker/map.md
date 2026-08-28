@@ -60,6 +60,12 @@ made and the build itself is either done or handed off as an unambiguous plan.
   history" are independent cascades (history rebuildable from retained
   extractions); account deletion is total; privacy copy has one repo source
   of truth; failure reasons are categorical, never quoted text.
+- [Extraction and import pipeline design](tickets/010-extraction-and-import-pipeline-design.md):
+  ~200-email batches through fetch/classify/extract with cursor resume;
+  synchronous Haiku for ambiguous emails during imports (Batch API only for
+  offline re-extraction); deterministic confidence formula; ~$1 LLM cap per
+  job degrading to the failure list; eval harness wired to corrections with
+  a synthetic fixture floor for CI.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
@@ -87,9 +93,6 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 - **Build plan / milestone ordering** — which frames ship in what order once
   stack, schema, and pipeline decisions close; becomes build tickets per area.
-- **Extraction eval harness** — the wireframes bake in a feedback loop
-  ("Correct this flight" / "Not a flight" / unparsed-email list feed evals);
-  how that harness works waits on the extraction pipeline design.
 - **Empty states and the settings/delete screens** — the wireframes' own "try
   next" list names them; design + build slice for the build plan (privacy model now settled).
 - **"Save as image" share export** — rendering approach decided (canvas

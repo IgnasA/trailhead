@@ -2,7 +2,7 @@
 title: Trip reconstruction rules
 label: wayfinder:grilling
 status: open
-assignee:
+assignee: Ignas + Claude (this session)
 blocked-by: [009]
 ---
 
