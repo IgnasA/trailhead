@@ -50,6 +50,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   Gmail consent, Realtime, Vault) + one Fly.io worker container carrying the
   kitinerary binary; `import_jobs` table as the job state machine; Resend,
   Sentry, GitHub Actions; pnpm monorepo. Full record: docs/adr/0001-stack.md.
+- [Domain model and schema](tickets/009-domain-model-and-schema.md):
+  Flight = one segment; two-layer extraction→merge model with provenance
+  links; flown/upcoming/cancelled status semantics; derived rebuildable trips
+  with corrections as immutable events (= the eval dataset); local wall time
+  as source truth. Deliverables: CONTEXT.md + docs/schema.sql.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
