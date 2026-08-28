@@ -1,7 +1,7 @@
 ---
 title: M1 auth and connect
 label: wayfinder:task
-status: open
+status: closed
 assignee: Ignas + Claude (this session)
 blocked-by: []
 ---
@@ -30,8 +30,10 @@ Built (branch `m1/auth-and-connect`):
   connection through RLS.
 - CI fix: removed the pnpm version double-pin that failed the first runs.
 
-Remaining to close: the live end-to-end test — the user signs in with their
-own Google account (they are a consent-screen test user). If Supabase bounces
-the redirect to `/` instead of `/auth/callback`, add
-`http://localhost:3000/**` under Auth → URL Configuration → Redirect URLs in
-the Supabase dashboard.
+## Resolution
+
+Live end-to-end test passed: the user signed in with their Google account,
+approved the gmail.readonly consent, and landed on /import showing the
+connected mailbox. Verified in the database: 1 auth user, 1 connected
+`gmail_connections` row, 1 `gmail_refresh:*` secret in Vault. M1's success
+criterion is met; M2 (import pipeline) is unblocked.
