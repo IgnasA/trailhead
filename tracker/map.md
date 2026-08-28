@@ -110,6 +110,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   restating footer counts; static inline-SVG landing teaser (no live map on
   the marketing page). MapLibre v6's module worker had to be self-hosted for
   Next dev to serve it.
+- [M5 reveal](tickets/020-m5-reveal.md): the three-stop free-flow reveal on
+  real data (102 flights, "about 15 days, 17 hours" in the air) with routes
+  drawing in and an in-browser "Save as image"; UTC derivation made durations
+  measurable, and implausible arrivals are recorded as unknown rather than
+  guessed.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
