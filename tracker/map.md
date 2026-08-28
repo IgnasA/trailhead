@@ -26,10 +26,10 @@ made and the build itself is either done or handed off as an unambiguous plan.
   for the Modernist look (Archivo, #ec3013 accent, 0 radius, 2px rules,
   flush-left, grayscale imagery). Demo dataset used consistently across frames:
   2019→2026, 132 flights, 47 countries, 91 airports, 312,482 km, 14 airlines.
-- **The wireframes cite a product brief by section number** (§13 AI rules, §19
-  LLM only for ambiguous cases, §20–21 deterministic aggregations / map rules,
-  §31 never persist bodies). That brief is not in this repo — recovering it is
-  a ticket, and until then the § notes in the frames are the best proxy.
+- **The product brief** the wireframes cite by section number lives at
+  [docs/brief.md](../docs/brief.md). Where it and the map's resolved decisions
+  differ, the map governs — the deltas are listed in
+  [Recover the product brief](tickets/001-recover-the-product-brief.md).
 - **Execution is in scope**: the user asked to *implement* the wireframes, so
   once the decision tickets ahead of an area are closed, build tickets for that
   area graduate out of the fog and are worked in this map rather than handed
@@ -45,6 +45,56 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 <!-- one line per closed ticket: name (linked) + gist -->
 
+- [Stack and hosting decision](tickets/003-stack-and-hosting.md):
+  Next.js/Vercel + fresh Supabase (`eu-central-1`, Auth with combined
+  Gmail consent, Realtime, Vault) + one Fly.io worker container carrying the
+  kitinerary binary; `import_jobs` table as the job state machine; Resend,
+  Sentry, GitHub Actions; pnpm monorepo. Full record: docs/adr/0001-stack.md.
+- [Domain model and schema](tickets/009-domain-model-and-schema.md):
+  Flight = one segment; two-layer extraction→merge model with provenance
+  links; flown/upcoming/cancelled status semantics; derived rebuildable trips
+  with corrections as immutable events (= the eval dataset); local wall time
+  as source truth. Deliverables: CONTEXT.md + docs/schema.sql.
+- [Privacy and deletion model](tickets/008-privacy-and-deletion-model.md):
+  disconnect revokes and deletes nothing; "delete my emails" and "delete my
+  history" are independent cascades (history rebuildable from retained
+  extractions); account deletion is total; privacy copy has one repo source
+  of truth; failure reasons are categorical, never quoted text.
+- [Extraction and import pipeline design](tickets/010-extraction-and-import-pipeline-design.md):
+  ~200-email batches through fetch/classify/extract with cursor resume;
+  synchronous Haiku for ambiguous emails during imports (Batch API only for
+  offline re-extraction); deterministic confidence formula; ~$1 LLM cap per
+  job degrading to the failure list; eval harness wired to corrections with
+  a synthetic fixture floor for CI.
+- [Trip reconstruction rules](tickets/011-trip-reconstruction-rules.md):
+  per-year home airport; 21-day-gap airport/metro chaining back to home;
+  fully deterministic — ambiguity goes to needs_review with a data-bearing
+  reason, never to an LLM; correction-touched trips are pinned across
+  rebuilds.
+- [Build plan](tickets/014-build-plan.md): seven milestones M0 scaffold ->
+  M1 auth/connect -> M2 import pipeline (kitinerary spike first) -> M3
+  dashboard -> M4 map -> M5 reveal + save-as-image -> M6 settings/polish;
+  dogfood after M2, no outside test users before M5; milestones expand into
+  build tickets as reached.
+- [Recover the product brief](tickets/001-recover-the-product-brief.md):
+  found in the design project's uploads via DesignSync; committed as
+  docs/brief.md; deltas vs the map's decisions recorded (the map governs).
+- [Design sync access](tickets/002-design-sync-access.md): `/design-login`
+  done; DesignSync reads the design project directly.
+- [Google Cloud OAuth setup](tickets/013-google-cloud-oauth-setup.md):
+  done via scripts/setup-google-oauth.sh — Supabase project
+  `giylqxatradpvsytpery` (eu-central-1) + Google Cloud `trailhead-506918`,
+  consent in Testing mode, gmail.readonly scope, OAuth client wired into
+  Supabase Auth. M1 is ungated.
+- [Reveal scroll story prototype](tickets/012-reveal-scroll-story-prototype.md):
+  verdict = free flow (reveal-once on scroll entry, eased count-ups, route
+  draw-in; no scroll-snap or hijack). Primary source on branch
+  `prototype/reveal`.
+- [M0 scaffold](tickets/015-m0-scaffold.md): monorepo (domain/web/worker)
+  typechecking and tested; schema applied to Supabase (11 tables, RLS);
+  reference-data vendoring working (9,054 airports / 993 airlines); CI live;
+  styling = plain Modernist CSS (fog item resolved). Leftovers: Fly app
+  creation + DB seeding, both needing user credentials.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
@@ -70,23 +120,16 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 ## Not yet specified
 
-- **Build plan / milestone ordering** — which frames ship in what order once
-  stack, schema, and pipeline decisions close; becomes build tickets per area.
-- **Extraction eval harness** — the wireframes bake in a feedback loop
-  ("Correct this flight" / "Not a flight" / unparsed-email list feed evals);
-  how that harness works waits on the extraction pipeline design.
-- **Empty states and the settings/delete screens** — the wireframes' own "try
-  next" list names them; design + build once the privacy/deletion model closes.
-- **"Save as image" share export** — how the map+stats image gets rendered;
-  waits on map stack decisions.
-- **Email notification on import completion** ("We'll email you when it's
-  done") — provider and copy; waits on stack.
-- **Hi-fi visual pass** — the wireframes say it's "a skin, not a re-layout";
-  the reveal hi-fi prototype ticket will set the bar for the rest.
-- **Deployment / CI** — waits on stack.
+_Nothing — remaining work is build milestones M1–M6 (see the
+[Build plan](tickets/014-build-plan.md))._
 
 ## Out of scope
 
+- Billing / premium tier (brief §34 M7, §37) — beyond the wireframes'
+  destination; its own effort after validation.
+- Multiple Gmail mailboxes per user — the MVP is one mailbox per user; the
+  schema leaves the door open (`gmail_connections`), but building it is a
+  future effort.
 - Social sharing flows beyond the single "Save as image" button — the
   wireframes note sharing isn't on the milestone list.
 - The alternative 4-stop reveal with spend stats — offered in the design's

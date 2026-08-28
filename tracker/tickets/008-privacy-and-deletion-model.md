@@ -1,8 +1,8 @@
 ---
 title: Privacy and deletion model
 label: wayfinder:grilling
-status: open
-assignee:
+status: closed
+assignee: Ignas + Claude (this session)
 blocked-by: [004]
 ---
 
@@ -28,3 +28,26 @@ are user data too), and the privacy-page copy. Blocked by
 [Gmail access and OAuth verification constraints](004-gmail-access-and-verification.md)
 because Google's Limited Use policy constrains what may be stored and how
 deletion must behave.
+
+## Resolution
+
+One grilling round, all recommendations accepted:
+
+- **Disconnect Gmail**: revoke at Google + delete from Vault + mark
+  connection disconnected. All data stays.
+- **"Delete my emails"**: deletes `source_emails`, cascading extractions and
+  provenance links; flights survive; provenance panel shows "source deleted".
+- **"Delete my history"**: deletes flights, trips, corrections; keeps source
+  emails + extractions, so a regretted deletion rebuilds instantly from
+  stored extractions without re-reading Gmail. Both deletions together =
+  genuine zero.
+- **Account deletion**: total cascade — token revoked at Google first, auth
+  user removed, corrections/eval labels included; nothing retained.
+- **Privacy copy**: one source of truth (`docs/privacy.md`, written at
+  build) rendered by both the privacy page and the permissions screen —
+  drift structurally impossible; wording says "never store bodies" precisely
+  (subjects ARE stored).
+- **Failure-list hygiene**: `import_failures.reason` is categorical, never
+  quoted email text — the no-content rule extends to stored reasons.
+
+Glossary updated: deletion actions added to [CONTEXT.md](../../CONTEXT.md).

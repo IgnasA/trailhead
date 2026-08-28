@@ -1,0 +1,21 @@
+# Deploys the import worker to Fly (app: trailhead-worker, region fra).
+# Needs the FLY_API_TOKEN repo secret (a Fly deploy token).
+name: Deploy worker
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "apps/worker/**"
+      - "packages/domain/**"
+      - ".github/workflows/deploy-worker.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --config apps/worker/fly.toml --dockerfile apps/worker/Dockerfile
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

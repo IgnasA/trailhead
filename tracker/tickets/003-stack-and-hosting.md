@@ -1,8 +1,8 @@
 ---
 title: Stack and hosting decision
 label: wayfinder:grilling
-status: open
-assignee:
+status: closed
+assignee: Ignas + Claude (this session)
 blocked-by: []
 ---
 
@@ -28,3 +28,27 @@ functions) is the intended backend. Grill on: is that the intent? What pairs
 with it for the frontend (Next.js? Remix? plain Vite SPA?), where do
 long-running import jobs run (Supabase edge functions have tight limits), and
 what's the deploy target?
+
+## Resolution
+
+Grilled over three rounds, every recommendation accepted. Full record:
+[docs/adr/0001-stack.md](../../docs/adr/0001-stack.md).
+
+- **Web**: Next.js (App Router) + TypeScript on Vercel (Hobby while
+  dogfooding, Pro at launch).
+- **Backend**: fresh Supabase project, `eu-central-1` (the paused
+  `flight-scanner` project is mined for parts only). Supabase Auth Google
+  provider with `gmail.readonly` in the same consent — sign-up and
+  Gmail-connect are one gesture, matching frames 1a/1b; RLS on all user data.
+- **Import worker**: one always-on Fly.io container (`fra`/`ams`), Node/TS +
+  the kitinerary binary in the image. No queue library — `import_jobs` table
+  as the job state machine, `FOR UPDATE SKIP LOCKED`, cursor-based resume.
+- **Progress**: Supabase Realtime on the job row, polling fallback.
+- **Token custody**: Supabase Vault, service-role-only access.
+- **Email**: Resend. **Observability**: Sentry + a standing no-content
+  logging rule (Limited Use). **CI**: GitHub Actions; Vercel auto-deploy,
+  Action-deploy for the worker.
+- **Repo**: pnpm workspace — `apps/web`, `apps/worker`, `packages/domain`.
+
+Budget: ~$25/mo ceiling holds (worker ~$3-5/mo is the only always-on cost
+until Vercel Pro at launch).
