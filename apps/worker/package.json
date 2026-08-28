@@ -10,9 +10,11 @@
     "test": "echo 'no worker tests yet'"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.121.0",
     "@trailhead/domain": "workspace:*",
     "pg": "^8.13.0",
-    "tsx": "^4.19.0"
+    "tsx": "^4.19.0",
+    "@trailhead/gmail": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
