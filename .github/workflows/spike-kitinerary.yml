@@ -26,6 +26,19 @@ jobs:
              "arrivalTime":"2025-06-15T11:40:00+09:00"}}
           </script></head><body>Your Lufthansa booking confirmation</body></html>
           HTML
+          docker run --rm -v /tmp/sample.html:/sample.html alpine:3.21 sh -c '
+            apk update -q >/dev/null 2>&1 || true
+            echo "=== alpine search ==="
+            apk search -q kitinerary || true
+            apk search -q itinerary || true
+            if apk add -q kitinerary >/dev/null 2>&1; then
+              echo "=== alpine installed kitinerary ==="
+              which kitinerary-extractor && kitinerary-extractor /sample.html || true
+              du -sh /usr
+            else
+              echo "=== alpine: kitinerary NOT installable ==="
+            fi
+          ' || true
           for base in debian:trixie-slim debian:bookworm-slim; do
             echo "########## $base ##########"
             docker run --rm -v /tmp/sample.html:/sample.html "$base" bash -c '
