@@ -115,6 +115,10 @@ made and the build itself is either done or handed off as an unambiguous plan.
   drawing in and an in-browser "Save as image"; UTC derivation made durations
   measurable, and implausible arrivals are recorded as unknown rather than
   guessed.
+- [Extraction cost reduction and the plan step](tickets/022-extraction-cost.md):
+  evidence-based pre-filter, Batch API at half price, 6k body cap — measured
+  against a real 70-email sample; plus the post-connect plan step, which
+  returns billing to scope as an interest signal rather than a payment flow.
 - [M6 settings, deletion and corrections](tickets/021-m6-settings-and-corrections.md):
   privacy copy lives once and generates the doc; settings states what is held
   and offers the four separate actions with typed confirmation; corrections
