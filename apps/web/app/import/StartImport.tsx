@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../../lib/supabase/client";
 
-export function StartImport() {
+export function StartImport({
+  label = "Read my mailbox",
+  variant = "btn-primary",
+}: {
+  label?: string;
+  variant?: "btn-primary" | "btn-secondary";
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -24,8 +30,8 @@ export function StartImport() {
 
   return (
     <div>
-      <button className="btn btn-primary" onClick={start} disabled={busy}>
-        {busy ? "Starting…" : "Read my mailbox"}
+      <button className={`btn ${variant}`} onClick={start} disabled={busy}>
+        {busy ? "Starting…" : label}
       </button>
       {error && <p style={{ marginTop: 10, fontSize: 13, color: "var(--color-accent-700)" }}>{error}</p>}
     </div>

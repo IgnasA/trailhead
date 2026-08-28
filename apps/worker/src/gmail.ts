@@ -4,18 +4,50 @@
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const API = "https://gmail.googleapis.com/gmail/v1/users/me";
 
+/** Auth failures are distinct from transport failures: one means "an operator
+ *  must fix credentials", the other "the user must reconnect". The pipeline
+ *  turns these into user-facing states rather than a generic dead end. */
+export class GmailAuthError extends Error {
+  constructor(
+    readonly code: "bad_client_credentials" | "token_revoked" | "unknown",
+    message: string,
+  ) {
+    super(message);
+    this.name = "GmailAuthError";
+  }
+}
+
 export async function refreshAccessToken(refreshToken: string): Promise<string> {
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new GmailAuthError(
+      "bad_client_credentials",
+      "GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET not set",
+    );
+  }
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_OAUTH_CLIENT_ID ?? "",
-      client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? "",
+      client_id: clientId,
+      client_secret: clientSecret,
       refresh_token: refreshToken,
       grant_type: "refresh_token",
     }),
   });
-  if (!res.ok) throw new Error(`token refresh failed: ${res.status}`);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    // invalid_client = our credentials are wrong (operator problem).
+    // invalid_grant  = the user's token is revoked/expired (reconnect).
+    const code =
+      body.error === "invalid_client"
+        ? "bad_client_credentials"
+        : body.error === "invalid_grant"
+          ? "token_revoked"
+          : "unknown";
+    throw new GmailAuthError(code, `token refresh failed: ${res.status} ${body.error ?? ""}`.trim());
+  }
   const data = (await res.json()) as { access_token: string };
   return data.access_token;
 }

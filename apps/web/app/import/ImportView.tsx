@@ -4,7 +4,38 @@
 // on the user's import_jobs row, 2s polling as fallback. The worker never
 // talks to browsers.
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabaseBrowser } from "../../lib/supabase/client";
+import { StartImport } from "./StartImport";
+
+// A failed import always says what happened and what to do next — never a
+// dead end (pipeline ticket: per-item failures are surfaced, and so are the
+// job-level ones).
+const FAILURES: Record<string, { title: string; detail: string; action: "retry" | "reconnect" }> = {
+  gmail_token_revoked: {
+    title: "Gmail access expired.",
+    detail:
+      "Google's consent for this app lapsed — that's normal while Trailhead is in testing, where approvals expire every 7 days. Reconnect and the import picks up where it left off; nothing already imported is lost.",
+    action: "reconnect",
+  },
+  gmail_client_credentials: {
+    title: "We couldn't reach Gmail.",
+    detail:
+      "Trailhead's own Google credentials were rejected, so this isn't something you did — nothing was read and nothing was lost. It needs an operator fix before the import can run.",
+    action: "retry",
+  },
+  gmail_auth_failed: {
+    title: "We couldn't reach Gmail.",
+    detail: "Google refused the connection. Nothing was read. Try again in a moment.",
+    action: "retry",
+  },
+  pipeline_error: {
+    title: "The import stopped early.",
+    detail:
+      "Something broke mid-run. Anything already extracted was kept — starting again resumes rather than re-reading your mailbox.",
+    action: "retry",
+  },
+};
 
 export interface JobRow {
   id: string;
@@ -54,6 +85,10 @@ export function ImportView({ initialJob }: { initialJob: JobRow }) {
   const stageIndex = STAGE_LABELS.findIndex(([k]) => k === job.stage);
   const done = job.status === "completed";
   const failed = job.status === "failed";
+  const failure = failed
+    ? (FAILURES[String((job.counters as Record<string, unknown>)?.error_code ?? "pipeline_error")] ??
+       FAILURES.pipeline_error!)
+    : null;
   const totalToProcess = Math.max(1, (c.candidates ?? 0) - (c.cached_skipped ?? 0));
   const pct = done ? 100 : Math.min(99, Math.round(
     ((stageIndex >= 3 ? (c.processed ?? 0) / totalToProcess : 0) * 80) + stageIndex * 4,
@@ -68,9 +103,23 @@ export function ImportView({ initialJob }: { initialJob: JobRow }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1.25fr .75fr" }}>
       <div style={{ padding: "30px 24px", borderRight: "2px solid var(--color-text)" }}>
-        <h3 style={{ marginBottom: 24 }}>
-          {done ? "Your travel history is ready." : failed ? "The import hit a wall." : "Reading your mailbox"}
+        <h3 style={{ marginBottom: failure ? 12 : 24 }}>
+          {done ? "Your travel history is ready." : failure ? failure.title : "Reading your mailbox"}
         </h3>
+        {failure && (
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ maxWidth: "34em", fontSize: 13.5 }} className="text-muted">
+              {failure.detail}
+            </p>
+            <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 14 }}>
+              {failure.action === "reconnect" ? (
+                <Link href="/connect" className="btn btn-primary">Reconnect Gmail</Link>
+              ) : (
+                <StartImport label="Try again" />
+              )}
+            </div>
+          </div>
+        )}
         <div style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 12 }}>
           {rows.map((r) => (
             <div key={r.key} style={{
