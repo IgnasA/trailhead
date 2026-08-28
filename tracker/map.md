@@ -71,6 +71,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   fully deterministic — ambiguity goes to needs_review with a data-bearing
   reason, never to an LLM; correction-touched trips are pinned across
   rebuilds.
+- [Build plan](tickets/014-build-plan.md): seven milestones M0 scaffold ->
+  M1 auth/connect -> M2 import pipeline (kitinerary spike first) -> M3
+  dashboard -> M4 map -> M5 reveal + save-as-image -> M6 settings/polish;
+  dogfood after M2, no outside test users before M5; milestones expand into
+  build tickets as reached.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
@@ -96,15 +101,14 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 ## Not yet specified
 
-- **Empty states and the settings/delete screens** — the wireframes' own "try
-  next" list names them; design + build slice for the build plan (privacy model now settled).
-- **"Save as image" share export** — rendering approach decided (canvas
-  export per the basemap ticket); the build slice waits on the build plan.
-- **Hi-fi visual pass** — the wireframes say it's "a skin, not a re-layout";
-  the reveal hi-fi prototype ticket will set the bar for the rest.
+_Nothing — the way to the destination is fully charted. Remaining work lives
+in the open tickets and the build plan's milestones._
 
 ## Out of scope
 
+- Multiple Gmail mailboxes per user — the MVP is one mailbox per user; the
+  schema leaves the door open (`gmail_connections`), but building it is a
+  future effort.
 - Social sharing flows beyond the single "Save as image" button — the
   wireframes note sharing isn't on the milestone list.
 - The alternative 4-stop reveal with spend stats — offered in the design's
