@@ -2,7 +2,7 @@
 title: Reveal scroll story prototype
 label: wayfinder:prototype
 status: open
-assignee:
+assignee: Ignas + Claude (this session)
 blocked-by: []
 ---
 
@@ -26,3 +26,21 @@ choreography).
 
 HITL: build cheap, then react together. Link the prototype from this ticket
 when it exists.
+
+## Prototype
+
+Built: `prototypes/reveal-prototype.html` on branch **`prototype/reveal`**
+(one self-contained file — double-click it, or flip variants with the
+floating bar / arrow keys):
+
+- **A · Free flow** — one long scroll; each stop reveals and counts up once
+  as it enters the viewport. Lowest-friction, least theatrical.
+- **B · Hard stops** — CSS scroll-snap; three full-screen stops that play
+  their animation when snapped. Closest to the wireframe's "3 stops" read.
+- **C · Scrub** — a sticky stage where scroll position drives everything:
+  the 132 ticks up under your thumb, rows slot in one per scroll increment,
+  routes draw with progress. Most Wrapped-like; fully reversible.
+
+All three use the canonical demo dataset and a static placeholder world map
+(real map is MapLibre per the basemap ticket). Awaiting the user's verdict —
+that reaction resolves this ticket and sets M5's choreography.
