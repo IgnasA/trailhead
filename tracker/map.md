@@ -86,6 +86,10 @@ made and the build itself is either done or handed off as an unambiguous plan.
   `giylqxatradpvsytpery` (eu-central-1) + Google Cloud `trailhead-506918`,
   consent in Testing mode, gmail.readonly scope, OAuth client wired into
   Supabase Auth. M1 is ungated.
+- [Reveal scroll story prototype](tickets/012-reveal-scroll-story-prototype.md):
+  verdict = free flow (reveal-once on scroll entry, eased count-ups, route
+  draw-in; no scroll-snap or hijack). Primary source on branch
+  `prototype/reveal`.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime

@@ -1,7 +1,7 @@
 ---
 title: Reveal scroll story prototype
 label: wayfinder:prototype
-status: open
+status: closed
 assignee: Ignas + Claude (this session)
 blocked-by: []
 ---
@@ -44,3 +44,21 @@ floating bar / arrow keys):
 All three use the canonical demo dataset and a static placeholder world map
 (real map is MapLibre per the basemap ticket). Awaiting the user's verdict —
 that reaction resolves this ticket and sets M5's choreography.
+
+## Resolution
+
+**Verdict: Variant A — Free flow.** One continuous scroll; each stop reveals
+and counts up once as it enters the viewport; no scroll hijacking. The user
+picked it over B (scroll-snap hard stops) and C (scroll-scrubbed sticky
+stage).
+
+Implications for M5 (the reveal build):
+
+- Choreography: IntersectionObserver reveal-once + eased count-ups; route
+  draw-in triggered when the map stop enters view. No scroll-snap, no pinned
+  stages, no scroll hijack anywhere.
+- The prototype (all three variants + switcher) is the primary source:
+  branch `prototype/reveal`, `prototypes/reveal-prototype.html`. The M5
+  implementation rewrites the winner properly (the prototype is throwaway
+  code); the map placeholder is replaced by the real MapLibre component
+  (basemap ticket).
