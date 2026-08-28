@@ -2,7 +2,7 @@
 title: Google Cloud OAuth setup
 label: wayfinder:task
 status: open
-assignee:
+assignee: Ignas + Claude (this session)
 blocked-by: []
 ---
 

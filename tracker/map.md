@@ -26,10 +26,10 @@ made and the build itself is either done or handed off as an unambiguous plan.
   for the Modernist look (Archivo, #ec3013 accent, 0 radius, 2px rules,
   flush-left, grayscale imagery). Demo dataset used consistently across frames:
   2019→2026, 132 flights, 47 countries, 91 airports, 312,482 km, 14 airlines.
-- **The wireframes cite a product brief by section number** (§13 AI rules, §19
-  LLM only for ambiguous cases, §20–21 deterministic aggregations / map rules,
-  §31 never persist bodies). That brief is not in this repo — recovering it is
-  a ticket, and until then the § notes in the frames are the best proxy.
+- **The product brief** the wireframes cite by section number lives at
+  [docs/brief.md](../docs/brief.md). Where it and the map's resolved decisions
+  differ, the map governs — the deltas are listed in
+  [Recover the product brief](tickets/001-recover-the-product-brief.md).
 - **Execution is in scope**: the user asked to *implement* the wireframes, so
   once the decision tickets ahead of an area are closed, build tickets for that
   area graduate out of the fog and are worked in this map rather than handed
@@ -76,6 +76,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   dashboard -> M4 map -> M5 reveal + save-as-image -> M6 settings/polish;
   dogfood after M2, no outside test users before M5; milestones expand into
   build tickets as reached.
+- [Recover the product brief](tickets/001-recover-the-product-brief.md):
+  found in the design project's uploads via DesignSync; committed as
+  docs/brief.md; deltas vs the map's decisions recorded (the map governs).
+- [Design sync access](tickets/002-design-sync-access.md): `/design-login`
+  done; DesignSync reads the design project directly.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
@@ -101,11 +106,16 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 ## Not yet specified
 
-_Nothing — the way to the destination is fully charted. Remaining work lives
-in the open tickets and the build plan's milestones._
+- **Styling approach for M0/M1** — the brief (§6) recommends Tailwind +
+  shadcn/ui, but the Modernist design system (plain CSS tokens, 0 radius,
+  2px rules) is the design authority and clashes with shadcn defaults;
+  decide when scaffolding: plain Modernist CSS, Tailwind themed to the
+  tokens, or a mix.
 
 ## Out of scope
 
+- Billing / premium tier (brief §34 M7, §37) — beyond the wireframes'
+  destination; its own effort after validation.
 - Multiple Gmail mailboxes per user — the MVP is one mailbox per user; the
   schema leaves the door open (`gmail_connections`), but building it is a
   future effort.

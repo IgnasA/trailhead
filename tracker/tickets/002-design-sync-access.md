@@ -1,8 +1,8 @@
 ---
 title: Design sync access
 label: wayfinder:task
-status: open
-assignee:
+status: closed
+assignee: Ignas + Claude (this session)
 blocked-by: []
 ---
 
@@ -17,3 +17,11 @@ future design iterations (hi-fi passes, new frames) should sync cleanly.
 
 HITL: the login is an interactive OAuth-style flow only the user can complete.
 Resolve by noting that DesignSync reads the project successfully.
+
+## Resolution
+
+User ran `/design-login` (in an interactive terminal session — the command
+does not run inside the desktop app). Verified: DesignSync `list_files` reads
+the design project directly, and its first use immediately paid off by
+surfacing `uploads/travel-intelligence-ai-agent-brief.md` — see
+[Recover the product brief](001-recover-the-product-brief.md).
