@@ -66,6 +66,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   offline re-extraction); deterministic confidence formula; ~$1 LLM cap per
   job degrading to the failure list; eval harness wired to corrections with
   a synthetic fixture floor for CI.
+- [Trip reconstruction rules](tickets/011-trip-reconstruction-rules.md):
+  per-year home airport; 21-day-gap airport/metro chaining back to home;
+  fully deterministic — ambiguity goes to needs_review with a data-bearing
+  reason, never to an LLM; correction-touched trips are pinned across
+  rebuilds.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
@@ -91,8 +96,6 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 ## Not yet specified
 
-- **Build plan / milestone ordering** — which frames ship in what order once
-  stack, schema, and pipeline decisions close; becomes build tickets per area.
 - **Empty states and the settings/delete screens** — the wireframes' own "try
   next" list names them; design + build slice for the build plan (privacy model now settled).
 - **"Save as image" share export** — rendering approach decided (canvas
