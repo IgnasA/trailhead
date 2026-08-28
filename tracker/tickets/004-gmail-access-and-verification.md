@@ -35,8 +35,7 @@ promise that policy contradicts.
 
 ## Resolution
 
-Findings: `research/004-gmail-access-and-verification.md` on branch
-`research/gmail-access` (commit f69d2f0), all claims cited to Google primary
+Findings: [docs/research/004-gmail-access-and-verification.md](../../docs/research/004-gmail-access-and-verification.md), all claims cited to Google primary
 sources.
 
 - **Scope**: use `gmail.readonly` alone. `gmail.metadata` is equally

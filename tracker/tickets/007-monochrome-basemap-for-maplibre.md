@@ -28,8 +28,7 @@ answer here recommending the basemap + styling approach.
 
 ## Resolution
 
-Findings: `docs/research/007-monochrome-basemap-for-maplibre.md` on branch
-`research/basemap` (commit 3e09662).
+Findings: [docs/research/007-monochrome-basemap-for-maplibre.md](../../docs/research/007-monochrome-basemap-for-maplibre.md).
 
 - **Tiles**: OpenFreeMap public instance for the MVP — free, explicitly no
   request limits, no API key, commercial use fine, OpenMapTiles schema; only

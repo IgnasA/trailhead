@@ -26,8 +26,7 @@ consumes this.
 
 ## Resolution
 
-Findings: `docs/research/006-airports-and-airlines-reference-data.md` on
-branch `research/reference-data` (commit ae74256), with per-claim
+Findings: [docs/research/006-airports-and-airlines-reference-data.md](../../docs/research/006-airports-and-airlines-reference-data.md), with per-claim
 primary-source citations and measured dataset stats.
 
 A three-part combination:
