@@ -12,6 +12,7 @@
     "vendor:reference-data": "node scripts/vendor-reference-data.mjs"
   },
   "devDependencies": {
-    "@photostructure/tz-lookup": "^11.6.1"
+    "@photostructure/tz-lookup": "^11.6.1",
+    "pg": "^8.23.0"
   }
 }

@@ -44,6 +44,7 @@ Leftovers (blocked on credentials only the user holds; first slices of M1/M2):
 1. **Fly app**: done — `trailhead-worker` (fra) created by the user via
    `fly launch`; deploy workflow flipped to push-on-main (worker paths).
    User adds `FLY_API_TOKEN` via `gh secret set` directly.
-2. **Seed the airports/airlines tables**: needs `DATABASE_URL` (the Supabase
-   DB password lives in the user's password manager); then a small seed step
-   loads the vendored JSON.
+2. **Seed the airports/airlines tables**: done — `scripts/seed-reference-data.mjs`
+   (idempotent upsert) loaded 9,054 airports and 993 airlines; verified by
+   live count (VNO -> Europe/Vilnius, FR -> Ryanair). Re-run after
+   `pnpm vendor:reference-data` to refresh.

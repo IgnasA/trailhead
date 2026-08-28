@@ -11,6 +11,9 @@ importers:
       '@photostructure/tz-lookup':
         specifier: ^11.6.1
         version: 11.6.1
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
 
   apps/web:
     dependencies:
