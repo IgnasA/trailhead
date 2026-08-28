@@ -2,6 +2,7 @@
 // modifiers. Never model-self-reported. Versioned with EXTRACTION_VERSION.
 import { CONFIDENCE_BASE, type ExtractionTier } from "./flight.js";
 import type { FlightExtraction } from "./extraction.js";
+import { normalizeFlightNumber } from "./flightNumber.js";
 
 export interface ValidationContext {
   originKnown: boolean; // IATA resolves in reference data
@@ -27,7 +28,7 @@ export function computeConfidence(
 export function mergeKey(e: FlightExtraction): string {
   return [
     e.airlineIata ?? "??",
-    (e.flightNumber ?? "").replace(/\s+/g, ""),
+    normalizeFlightNumber(e.flightNumber, e.airlineIata) ?? "",
     e.departureDate ?? "????",
     e.originIata ?? "???",
     e.destIata ?? "???",

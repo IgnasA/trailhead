@@ -8,11 +8,13 @@ import {
   EXTRACTION_VERSION,
   GMAIL_SEARCH_QUERY,
   TRIP_CHAIN_MAX_GAP_DAYS,
+  bodyForExtraction,
   computeConfidence,
   extractSchemaOrgFlights,
   haversineKm,
   isLikelyFlightEmail,
   mergeKey,
+  normalizeFlightNumber,
   type FlightExtraction,
 } from "@trailhead/domain";
 import { fetchEmail, listAllMessageIds, refreshAccessToken } from "./gmail.js";
@@ -21,7 +23,7 @@ import { sendCompletionEmail } from "./email.js";
 
 const execFileP = promisify(execFile);
 const BATCH_SIZE = 200;
-const LLM_CALL_CAP = 300; // pipeline ticket: ~$1 ceiling, degrade to failures
+const LLM_CALL_CAP = Number(process.env.LLM_CALL_CAP ?? 300); // pipeline ticket: bounded spend, degrade to failures
 const STAGES = [
   "connect", "search", "skip_cached", "extract",
   "deduplicate", "reconstruct_trips", "build_history",
@@ -53,6 +55,10 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
       [job.id, job.user_id, gmailId, reason], // reasons are categorical — never email text
     );
   };
+
+  // A retry of the same job starts a fresh failure list — otherwise the
+  // reviewable list mixes attempts.
+  await pool.query(`delete from import_failures where job_id=$1`, [job.id]);
 
   // ── connect ───────────────────────────────────────────────────────────────
   await update("connect", {}, true);
@@ -138,9 +144,15 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
             continue;
           } else {
             counters.llm_calls += 1;
-            let result: FlightExtraction | null = null;
+            let result: Awaited<ReturnType<typeof llmExtract>> = null;
             try {
-              result = await llmExtract(email.subject, email.from, email.text || email.html);
+              result = await llmExtract(
+                email.subject, email.from, bodyForExtraction(email.text, email.html),
+              );
+              if (result) {
+                counters.llm_input_tokens = (counters.llm_input_tokens ?? 0) + result.inputTokens;
+                counters.llm_output_tokens = (counters.llm_output_tokens ?? 0) + result.outputTokens;
+              }
             } catch (err) {
               if (err instanceof LlmUnavailableError) {
                 // Trip the breaker: stop calling the LLM for the rest of the
@@ -156,14 +168,17 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
                 throw err;
               }
             }
-            if (result?.isFlightEmail && result.originIata && result.destIata && result.departureDate) {
-              extractions = [result];
+            const usable = (result?.extractions ?? []).filter(
+              (e) => e.originIata && e.destIata && e.departureDate,
+            );
+            if (usable.length > 0) {
+              extractions = usable;
               tier = "llm";
-            } else if (result && !result.isFlightEmail) {
-              // negative result is cached via source_emails below — never re-asked
             } else if (!result && llmAvailable) {
               await fail(gmailId, "llm_parse_failed");
             }
+            // A confident "not a flight" is cached via source_emails below,
+            // so it is never asked about again.
           }
         }
 
@@ -176,12 +191,12 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
           [job.user_id, gmailId, email.subject.slice(0, 500), hash, emailType, email.receivedAt],
         );
         if (tier) {
-          for (const ex of extractions) {
+          for (const [segmentIndex, ex] of extractions.entries()) {
             await pool.query(
-              `insert into email_extractions (user_id, source_email_id, extraction_version, tier, payload, confidence)
-               values ($1,$2,$3,$4,$5,$6)
-               on conflict (source_email_id, extraction_version) do nothing`,
-              [job.user_id, src.id, EXTRACTION_VERSION, tier, JSON.stringify(ex), 0.5],
+              `insert into email_extractions (user_id, source_email_id, extraction_version, segment_index, tier, payload, confidence)
+               values ($1,$2,$3,$4,$5,$6,$7)
+               on conflict (source_email_id, extraction_version, segment_index) do nothing`,
+              [job.user_id, src.id, EXTRACTION_VERSION, segmentIndex, tier, JSON.stringify(ex), 0.5],
             );
           }
           counters.flights_found += extractions.length;
@@ -245,7 +260,7 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
       [
         job.user_id,
         ex.departureDate! <= today ? "flown" : "upcoming",
-        ex.airlineIata, ex.flightNumber, ex.originIata, ex.destIata,
+        ex.airlineIata, normalizeFlightNumber(ex.flightNumber, ex.airlineIata), ex.originIata, ex.destIata,
         ex.departureDate, depLocal, origin.tz, arrLocal, dest.tz,
         haversineKm(origin.lat, origin.lon, dest.lat, dest.lon),
         ex.bookingRef, ex.priceAmount, ex.priceCurrency,
