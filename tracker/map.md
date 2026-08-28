@@ -45,14 +45,33 @@ made and the build itself is either done or handed off as an unambiguous plan.
 
 <!-- one line per closed ticket: name (linked) + gist -->
 
-_None yet._
+- [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
+  use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
+  users, 7-day token expiry) but never soft-launch unverified (lifetime
+  100-user cap); full verification ≈ 6 weeks + annual CASA ($540–$1,800/yr);
+  the store/never-store design is Limited-Use compliant; a 1,200-message scan
+  takes ~4–5 min against quota.
+- [Flight email extraction landscape](tickets/005-flight-email-extraction-landscape.md):
+  three-tier funnel — schema.org `FlightReservation` parser, then KDE
+  `kitinerary-extractor` sidecar, then Claude Haiku (Batch API, strict
+  structured outputs) for ambiguous cases only; deterministic confidence and
+  (flight, date, PNR) merging; launch with zero paid flight-data APIs.
+- [Airports and airlines reference data](tickets/006-airports-and-airlines-reference-data.md):
+  OurAirports for airports (public domain, daily-fresh); timezone computed at
+  import via `@photostructure/tz-lookup` and rendered with
+  `Intl.DateTimeFormat`; OpenFlights airlines.dat (ODbL, 2017-frozen) as a
+  seed for an internally maintained airline table; countries = ISO codes as
+  truth, territory folding a display-time decision.
+- [Monochrome basemap for MapLibre](tickets/007-monochrome-basemap-for-maplibre.md):
+  OpenFreeMap tiles + a custom minimal Positron-derived monochrome style
+  (Protomaps PMTiles as the upgrade path); Playwright build-time screenshot
+  for the landing teaser; `preserveDrawingBuffer` canvas export for Save as
+  image; `@turf/great-circle` pinned 7.3.1.
 
 ## Not yet specified
 
 - **Build plan / milestone ordering** — which frames ship in what order once
   stack, schema, and pipeline decisions close; becomes build tickets per area.
-- **Google Cloud setup task** — consent screen, scope request, test users;
-  specifiable once [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md) resolves.
 - **Extraction eval harness** — the wireframes bake in a feedback loop
   ("Correct this flight" / "Not a flight" / unparsed-email list feed evals);
   how that harness works waits on the extraction pipeline design.
