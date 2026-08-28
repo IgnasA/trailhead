@@ -100,6 +100,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   16 min for ~$1.54; kitinerary ruled out of the image, extraction is
   schema.org + capped Haiku with a breaker, normalization, and per-segment
   storage.
+- [M3 dashboard](tickets/018-m3-dashboard.md): overview, trips, flight
+  detail with provenance and live (never-persisted) source email, mobile
+  layout — running on the real 102-flight history. Chain ordering,
+  destination-by-distance, and the PostgREST 1000-row cap fixed; extraction
+  quality findings captured for the eval dataset.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
