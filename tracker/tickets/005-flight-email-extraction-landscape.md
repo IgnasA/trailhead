@@ -35,8 +35,7 @@ vs LLM split) for the pipeline-design ticket to grill over.
 
 ## Resolution
 
-Findings: `research/005-flight-email-extraction-landscape.md` on branch
-`research/flight-email-extraction` (commit 84f1491).
+Findings: [docs/research/005-flight-email-extraction-landscape.md](../../docs/research/005-flight-email-extraction-landscape.md).
 
 Recommended shape — a three-tier deterministic funnel with the LLM strictly at
 the edge:

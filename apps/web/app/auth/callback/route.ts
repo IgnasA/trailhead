@@ -35,5 +35,5 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/connect?error=store_failed", url.origin));
   }
 
-  return NextResponse.redirect(new URL("/import", url.origin));
+  return NextResponse.redirect(new URL("/plan", url.origin));
 }

@@ -95,6 +95,10 @@ made and the build itself is either done or handed off as an unambiguous plan.
   reference-data vendoring working (9,054 airports / 993 airlines); CI live;
   styling = plain Modernist CSS (fog item resolved). Leftovers: Fly app
   creation + DB seeding, both needing user credentials.
+- [M1 auth and connect](tickets/016-m1-auth-and-connect.md): landing (1a) +
+  trust screen (1b) + combined Google sign-in with gmail.readonly; refresh
+  token in Vault via definer function; live sign-in verified end-to-end
+  (1 user, 1 connection, 1 vault secret).
 - [M2 import pipeline](tickets/017-m2-import-pipeline.md): live mailbox
   imported end-to-end — 102 flights, 12 trips, 30 countries, 243,891 km in
   16 min for ~$1.54; kitinerary ruled out of the image, extraction is
@@ -115,6 +119,10 @@ made and the build itself is either done or handed off as an unambiguous plan.
   drawing in and an in-browser "Save as image"; UTC derivation made durations
   measurable, and implausible arrivals are recorded as unknown rather than
   guessed.
+- [Extraction cost reduction and the plan step](tickets/022-extraction-cost.md):
+  evidence-based pre-filter, Batch API at half price, 6k body cap — measured
+  against a real 70-email sample; plus the post-connect plan step, which
+  returns billing to scope as an interest signal rather than a payment flow.
 - [M6 settings, deletion and corrections](tickets/021-m6-settings-and-corrections.md):
   privacy copy lives once and generates the doc; settings states what is held
   and offers the four separate actions with typed confirmation; corrections

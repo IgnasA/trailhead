@@ -36,8 +36,11 @@ export function htmlToText(html: string): string {
 
 /** What the LLM tier reads, and what "view source" shows: plain text when the
  *  email has a real one, otherwise flattened HTML — capped so one enormous
- *  email can't dominate a job's token budget. */
-export function bodyForExtraction(text: string, html: string, maxChars = 12000): string {
+ *  email can't dominate a job's token budget. 6k chars ≈ 1.5k tokens: a
+ *  70-email sample of a real mailbox averaged 5,217 chars, with only a third
+ *  exceeding the cap, and every route/flight-number match in that sample fell
+ *  inside the first 6k. */
+export function bodyForExtraction(text: string, html: string, maxChars = 6000): string {
   const plain = tidyText(text);
   const source = plain.length > 200 ? plain : htmlToText(html);
   return source.slice(0, maxChars);

@@ -1,8 +1,11 @@
 // The import pipeline (pipeline + trip tickets): stage-by-stage over a job
 // row that IS the state machine. Per-item failures never abort the job.
+//
+// Extraction runs in two passes. The first fetches every candidate and tries
+// the deterministic tier; the second sends whatever is left to the LLM — as
+// one Message Batch (half price) when there are enough of them, or
+// synchronously for a handful, where batch turnaround isn't worth the wait.
 import { createHash } from "node:crypto";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import pg from "pg";
 import {
   EXTRACTION_VERSION,
@@ -18,12 +21,18 @@ import {
   type FlightExtraction,
 } from "@trailhead/domain";
 import { fetchEmail, listAllMessageIds, refreshAccessToken } from "@trailhead/gmail";
-import { LlmUnavailableError, llmExtract } from "./llm.js";
+import {
+  LlmUnavailableError, collectBatch, llmExtract, submitBatch, type BatchItem,
+} from "./llm.js";
 import { sendCompletionEmail } from "./email.js";
 
-const execFileP = promisify(execFile);
-const BATCH_SIZE = 200;
-const LLM_CALL_CAP = Number(process.env.LLM_CALL_CAP ?? 300); // pipeline ticket: bounded spend, degrade to failures
+const LLM_CALL_CAP = Number(process.env.LLM_CALL_CAP ?? 800);
+/** Below this many candidates, batching costs more waiting than it saves. */
+const BATCH_MIN = Number(process.env.LLM_BATCH_MIN ?? 20);
+const BATCH_POLL_MS = 15_000;
+const BATCH_MAX_WAIT_MS = Number(process.env.LLM_BATCH_MAX_WAIT_MS ?? 3_600_000);
+const FETCH_CHUNK = 200;
+
 const STAGES = [
   "connect", "search", "skip_cached", "extract",
   "deduplicate", "reconstruct_trips", "build_history",
@@ -34,6 +43,13 @@ interface Job {
   user_id: string;
   counters: Record<string, number>;
   cursor: Record<string, unknown>;
+}
+
+/** An email awaiting the LLM: deliberately kept out of the skip-cache until
+ *  its verdict lands, so an interrupted job retries exactly these. */
+interface Pending extends BatchItem {
+  hash: string;
+  receivedAt: string | null;
 }
 
 export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
@@ -55,9 +71,31 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
       [job.id, job.user_id, gmailId, reason], // reasons are categorical — never email text
     );
   };
+  const cacheEmail = async (
+    gmailId: string, subject: string, hash: string, emailType: string, receivedAt: string | null,
+  ): Promise<string> => {
+    const { rows: [src] } = await pool.query(
+      `insert into source_emails (user_id, gmail_message_id, subject, content_hash, email_type, received_at)
+       values ($1,$2,$3,$4,$5,$6)
+       on conflict (user_id, gmail_message_id) do update set content_hash=excluded.content_hash
+       returning id`,
+      [job.user_id, gmailId, subject.slice(0, 500), hash, emailType, receivedAt],
+    );
+    return src.id as string;
+  };
+  const storeExtractions = async (sourceId: string, tier: string, extractions: FlightExtraction[]) => {
+    for (const [segmentIndex, ex] of extractions.entries()) {
+      await pool.query(
+        `insert into email_extractions (user_id, source_email_id, extraction_version, segment_index, tier, payload, confidence)
+         values ($1,$2,$3,$4,$5,$6,$7)
+         on conflict (source_email_id, extraction_version, segment_index) do nothing`,
+        [job.user_id, sourceId, EXTRACTION_VERSION, segmentIndex, tier, JSON.stringify(ex), 0.5],
+      );
+    }
+    counters.flights_found = (counters.flights_found ?? 0) + extractions.length;
+  };
 
-  // A retry of the same job starts a fresh failure list — otherwise the
-  // reviewable list mixes attempts.
+  // A retry of the same job starts a fresh failure list.
   await pool.query(`delete from import_failures where job_id=$1`, [job.id]);
 
   // ── connect ───────────────────────────────────────────────────────────────
@@ -79,142 +117,146 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
   // ── skip_cached ───────────────────────────────────────────────────────────
   await update("skip_cached", {}, true);
   const { rows: cachedRows } = await pool.query(
-    `select gmail_message_id from source_emails where user_id=$1`,
-    [job.user_id],
+    `select gmail_message_id from source_emails where user_id=$1`, [job.user_id],
   );
   const cached = new Set(cachedRows.map((r) => r.gmail_message_id as string));
   const todo = allIds.filter((id) => !cached.has(id));
   counters.cached_skipped = allIds.length - todo.length;
   await update("skip_cached", {}, true);
 
-  // ── extract (batched; resume via cursor.offset) ───────────────────────────
-  const startOffset = Number(job.cursor["offset"] ?? 0);
-  const batchTotal = Math.max(1, Math.ceil(todo.length / BATCH_SIZE));
+  // ── extract, pass 1: fetch + deterministic tier + pre-filter ──────────────
   counters.processed = counters.processed ?? 0;
   counters.flights_found = counters.flights_found ?? 0;
   counters.llm_calls = counters.llm_calls ?? 0;
-  const kitineraryBin = process.env.KITINERARY_BIN;
-  let llmAvailable = true;
+  const pending: Pending[] = [];
+  const chunkTotal = Math.max(1, Math.ceil(todo.length / FETCH_CHUNK));
 
-  for (let offset = startOffset; offset < todo.length; offset += BATCH_SIZE) {
-    const batch = todo.slice(offset, offset + BATCH_SIZE);
-    const batchNo = Math.floor(offset / BATCH_SIZE) + 1;
-    await pool.query(`update import_jobs set batch_current=$2, batch_total=$3 where id=$1`, [
-      job.id, batchNo, batchTotal,
-    ]);
-    for (const gmailId of batch) {
-      try {
-        const email = await fetchEmail(accessToken, gmailId);
-        const bodyForHash = email.html || email.text || email.subject;
-        const hash = createHash("sha256").update(bodyForHash).digest("hex");
+  for (const [index, gmailId] of todo.entries()) {
+    if (index % FETCH_CHUNK === 0) {
+      await pool.query(`update import_jobs set batch_current=$2, batch_total=$3 where id=$1`, [
+        job.id, Math.floor(index / FETCH_CHUNK) + 1, chunkTotal,
+      ]);
+    }
+    try {
+      const email = await fetchEmail(accessToken, gmailId);
+      const body = bodyForExtraction(email.text, email.html);
+      const hash = createHash("sha256").update(email.html || email.text || email.subject).digest("hex");
 
-        let extractions: FlightExtraction[] = [];
-        let tier: "schema_org" | "kitinerary" | "llm" | null = null;
+      const schemaOrg = extractSchemaOrgFlights(email.html);
+      if (schemaOrg.length > 0) {
+        const sourceId = await cacheEmail(gmailId, email.subject, hash, schemaOrg[0]!.emailType, email.receivedAt);
+        await storeExtractions(sourceId, "schema_org", schemaOrg);
+      } else if (isLikelyFlightEmail({ subject: email.subject, from: email.from, body })) {
+        pending.push({ id: gmailId, subject: email.subject, from: email.from, body, hash, receivedAt: email.receivedAt });
+      } else {
+        // A confident deterministic "not a flight": cache it so it is never
+        // paid for again. This is the pre-filter's whole purpose.
+        await cacheEmail(gmailId, email.subject, hash, "unknown", email.receivedAt);
+        counters.prefiltered = (counters.prefiltered ?? 0) + 1;
+      }
+      counters.processed += 1;
+      await update("extract");
+    } catch (err) {
+      await fail(gmailId, err instanceof Error && /gmail/.test(err.message) ? "gmail_fetch_failed" : "processing_error");
+      counters.processed += 1;
+    }
+  }
+  counters.llm_candidates = pending.length;
+  await update("extract", {}, true);
 
-        extractions = extractSchemaOrgFlights(email.html);
-        if (extractions.length > 0) tier = "schema_org";
+  // ── extract, pass 2: the LLM tier ─────────────────────────────────────────
+  const capped = pending.slice(0, LLM_CALL_CAP);
+  for (const over of pending.slice(LLM_CALL_CAP)) await fail(over.id, "llm_budget_exhausted");
 
-        if (!tier && kitineraryBin && email.html) {
-          try {
-            const { stdout } = await execFileP(kitineraryBin, [], {
-              maxBuffer: 4 * 1024 * 1024,
-              timeout: 20000,
-              // kitinerary reads the document from stdin
-              ...({ input: email.html } as object),
-            } as never);
-            extractions = extractSchemaOrgFlights(
-              `<script type="application/ld+json">${stdout}</script>`,
-            );
-            if (extractions.length > 0) tier = "kitinerary";
-          } catch {
-            // kitinerary miss/crash on one email is not a failure — fall through
-          }
+  const applyResult = async (item: Pending, extractions: FlightExtraction[]) => {
+    const usable = extractions.filter((e) => e.originIata && e.destIata && e.departureDate);
+    const sourceId = await cacheEmail(
+      item.id, item.subject, item.hash, usable[0]?.emailType ?? "unknown", item.receivedAt,
+    );
+    if (usable.length > 0) await storeExtractions(sourceId, "llm", usable);
+  };
+
+  if (capped.length > 0) {
+    try {
+      if (capped.length >= BATCH_MIN) {
+        // Half price, at the cost of turnaround — the progress page says so.
+        let batchId = (job.cursor["batch_id"] as string | null | undefined) ?? null;
+        if (!batchId) {
+          batchId = await submitBatch(capped);
+          await update("extract", { batch_id: batchId }, true);
         }
+        counters.batch_waiting = 1;
+        counters.llm_calls += capped.length;
+        await update("extract", {}, true);
 
-        if (!tier && isLikelyFlightEmail(email.subject, email.from)) {
-          if (!llmAvailable) {
-            // Systemic failure: do NOT cache this email — leaving it uncached
-            // is what makes a later re-run retry exactly these.
-            await fail(gmailId, "llm_unavailable");
-            counters.processed += 1;
+        const deadline = Date.now() + BATCH_MAX_WAIT_MS;
+        let outcome = await collectBatch(batchId);
+        while (!outcome && Date.now() < deadline) {
+          await new Promise((r) => setTimeout(r, BATCH_POLL_MS));
+          await update("extract", {}, true); // heartbeat
+          outcome = await collectBatch(batchId);
+        }
+        counters.batch_waiting = 0;
+        if (!outcome) throw new Error("extraction batch did not finish in time");
+
+        counters.llm_input_tokens = (counters.llm_input_tokens ?? 0) + outcome.inputTokens;
+        counters.llm_output_tokens = (counters.llm_output_tokens ?? 0) + outcome.outputTokens;
+        for (const item of capped) {
+          const extractions = outcome.results.get(item.id);
+          if (extractions) await applyResult(item, extractions);
+          else await fail(item.id, "llm_parse_failed"); // uncached — retried next run
+        }
+        await update("extract", { batch_id: null }, true);
+      } else {
+        for (const item of capped) {
+          counters.llm_calls += 1;
+          const result = await llmExtract(item.subject, item.from, item.body);
+          if (!result) {
+            await fail(item.id, "llm_parse_failed");
             continue;
-          } else if (counters.llm_calls >= LLM_CALL_CAP) {
-            await fail(gmailId, "llm_budget_exhausted");
-            counters.processed += 1;
-            continue;
-          } else {
-            counters.llm_calls += 1;
-            let result: Awaited<ReturnType<typeof llmExtract>> = null;
-            try {
-              result = await llmExtract(
-                email.subject, email.from, bodyForExtraction(email.text, email.html),
-              );
-              if (result) {
-                counters.llm_input_tokens = (counters.llm_input_tokens ?? 0) + result.inputTokens;
-                counters.llm_output_tokens = (counters.llm_output_tokens ?? 0) + result.outputTokens;
-              }
-            } catch (err) {
-              if (err instanceof LlmUnavailableError) {
-                // Trip the breaker: stop calling the LLM for the rest of the
-                // job and mark the whole import as degraded rather than
-                // burning the mailbox into identical errors.
-                llmAvailable = false;
-                counters.extraction_degraded = 1;
-                console.error(`worker: LLM tier disabled for this job (${err.code}) — continuing deterministic-only`);
-                await fail(gmailId, "llm_unavailable");
-                counters.processed += 1;
-                continue;
-              } else {
-                throw err;
-              }
-            }
-            const usable = (result?.extractions ?? []).filter(
-              (e) => e.originIata && e.destIata && e.departureDate,
-            );
-            if (usable.length > 0) {
-              extractions = usable;
-              tier = "llm";
-            } else if (!result && llmAvailable) {
-              await fail(gmailId, "llm_parse_failed");
-            }
-            // A confident "not a flight" is cached via source_emails below,
-            // so it is never asked about again.
           }
+          counters.llm_input_tokens = (counters.llm_input_tokens ?? 0) + result.inputTokens;
+          counters.llm_output_tokens = (counters.llm_output_tokens ?? 0) + result.outputTokens;
+          await applyResult(item, result.extractions);
+          await update("extract");
         }
-
-        const emailType = extractions[0]?.emailType ?? "unknown";
-        const { rows: [src] } = await pool.query(
-          `insert into source_emails (user_id, gmail_message_id, subject, content_hash, email_type, received_at)
-           values ($1,$2,$3,$4,$5,$6)
-           on conflict (user_id, gmail_message_id) do update set content_hash=excluded.content_hash
-           returning id`,
-          [job.user_id, gmailId, email.subject.slice(0, 500), hash, emailType, email.receivedAt],
-        );
-        if (tier) {
-          for (const [segmentIndex, ex] of extractions.entries()) {
-            await pool.query(
-              `insert into email_extractions (user_id, source_email_id, extraction_version, segment_index, tier, payload, confidence)
-               values ($1,$2,$3,$4,$5,$6,$7)
-               on conflict (source_email_id, extraction_version, segment_index) do nothing`,
-              [job.user_id, src.id, EXTRACTION_VERSION, segmentIndex, tier, JSON.stringify(ex), 0.5],
-            );
-          }
-          counters.flights_found += extractions.length;
-        }
-        counters.processed += 1;
-        await update("extract");
-      } catch (err) {
-        await fail(gmailId, err instanceof Error && /gmail/.test(err.message) ? "gmail_fetch_failed" : "processing_error");
-        counters.processed += 1;
+      }
+    } catch (err) {
+      if (err instanceof LlmUnavailableError) {
+        // Systemic: mark the import degraded and carry on with what the
+        // deterministic tier found. Nothing pending is cached, so a re-run
+        // retries exactly those emails.
+        counters.extraction_degraded = 1;
+        counters.batch_waiting = 0;
+        console.error(`worker: LLM tier disabled for this job (${err.code}) — continuing deterministic-only`);
+        for (const item of capped) await fail(item.id, "llm_unavailable");
+      } else {
+        throw err;
       }
     }
-    await update("extract", { offset: offset + BATCH_SIZE }, true);
   }
+  await update("extract", {}, true);
 
-  // ── deduplicate / merge (rebuild canonical flights from all extractions) ──
+  // Derive UTC from local wall times and airport zones (migrations 0008/0009).
+  await pool.query(
+    `update flights set dep_utc = (dep_local at time zone dep_tz)
+     where user_id=$1 and dep_local is not null and dep_tz is not null`, [job.user_id]);
+  await pool.query(
+    `update flights set arr_utc = (arr_local at time zone arr_tz)
+     where user_id=$1 and arr_local is not null and arr_tz is not null`, [job.user_id]);
+  await pool.query(
+    `update flights set arr_utc = arr_utc + interval '1 day'
+     where user_id=$1 and arr_utc is not null and dep_utc is not null and arr_utc <= dep_utc`, [job.user_id]);
+  await pool.query(
+    `update flights set arr_utc = null
+     where user_id=$1 and arr_utc is not null and dep_utc is not null and distance_km is not null
+       and extract(epoch from (arr_utc - dep_utc)) / 3600.0 > 2.0 * (distance_km / 800.0 + 0.5)`,
+    [job.user_id]);
+
+  // ── deduplicate / merge ───────────────────────────────────────────────────
   await update("deduplicate", {}, true);
   const { rows: extractionRows } = await pool.query(
-    `select e.id, e.tier, e.payload from email_extractions e where e.user_id=$1 and e.extraction_version=$2`,
+    `select id, tier, payload from email_extractions where user_id=$1 and extraction_version=$2`,
     [job.user_id, EXTRACTION_VERSION],
   );
   const groups = new Map<string, { ids: string[]; tiers: string[]; ex: FlightExtraction }>();
@@ -226,7 +268,6 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
     if (g) {
       g.ids.push(row.id);
       g.tiers.push(row.tier);
-      // richer field wins; confirmation-type sources take precedence implicitly
       for (const k of Object.keys(ex) as (keyof FlightExtraction)[]) {
         if (g.ex[k] == null && ex[k] != null) (g.ex as Record<string, unknown>)[k] = ex[k];
       }
@@ -238,24 +279,20 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
   const { rows: airportRows } = await pool.query(`select iata, lat, lon, tz from airports`);
   const airports = new Map(airportRows.map((a) => [a.iata as string, a]));
 
-  await pool.query(`delete from flights where user_id=$1`, [job.user_id]); // corrections replay lands with M3
+  await pool.query(`delete from flights where user_id=$1`, [job.user_id]);
   counters.flights = 0;
   const today = new Date().toISOString().slice(0, 10);
   const flightIds: { id: string; date: string; origin: string; dest: string }[] = [];
   for (const { ids, tiers, ex } of groups.values()) {
     const origin = airports.get(ex.originIata!);
     const dest = airports.get(ex.destIata!);
-    if (!origin || !dest) continue; // unknown airport → stays extraction-only
+    if (!origin || !dest) continue;
     const bestTier = tiers.includes("schema_org") ? "schema_org" : tiers.includes("kitinerary") ? "kitinerary" : "llm";
     const confidence = computeConfidence(bestTier, ex, {
       originKnown: true, destKnown: true, corroboratingEmails: ids.length - 1,
     });
     const depLocal = ex.depLocalTime ? `${ex.departureDate} ${ex.depLocalTime}` : null;
     const arrLocal = ex.arrLocalTime ? `${ex.departureDate} ${ex.arrLocalTime}` : null;
-    // UTC is derived from the local wall time and the airport zone (never
-    // re-extracted). An arrival that lands before departure crossed midnight;
-    // if rolling it a day forward still contradicts the great-circle
-    // distance, we don't know the arrival — store null rather than a guess.
     const distanceKm = haversineKm(origin.lat, origin.lon, dest.lat, dest.lon);
     const { rows: [f] } = await pool.query(
       `insert into flights (user_id, status, airline_iata, flight_number, origin_iata, dest_iata,
@@ -266,10 +303,8 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
         job.user_id,
         ex.departureDate! <= today ? "flown" : "upcoming",
         ex.airlineIata, normalizeFlightNumber(ex.flightNumber, ex.airlineIata), ex.originIata, ex.destIata,
-        ex.departureDate, depLocal, origin.tz, arrLocal, dest.tz,
-        distanceKm,
-        ex.bookingRef, ex.priceAmount, ex.priceCurrency,
-        confidence, EXTRACTION_VERSION,
+        ex.departureDate, depLocal, origin.tz, arrLocal, dest.tz, distanceKm,
+        ex.bookingRef, ex.priceAmount, ex.priceCurrency, confidence, EXTRACTION_VERSION,
       ],
     );
     for (const exId of ids) {
@@ -281,35 +316,9 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
     counters.flights += 1;
     flightIds.push({ id: f.id, date: ex.departureDate!, origin: ex.originIata!, dest: ex.destIata! });
   }
-  // Derive UTC from the stored local wall times and airport zones — the same
-  // rules as migrations 0008/0009, applied to every import.
-  await pool.query(
-    `update flights set dep_utc = (dep_local at time zone dep_tz)
-     where user_id=$1 and dep_local is not null and dep_tz is not null`,
-    [job.user_id],
-  );
-  await pool.query(
-    `update flights set arr_utc = (arr_local at time zone arr_tz)
-     where user_id=$1 and arr_local is not null and arr_tz is not null`,
-    [job.user_id],
-  );
-  // Only a time was extracted, so an arrival "before" departure crossed midnight.
-  await pool.query(
-    `update flights set arr_utc = arr_utc + interval '1 day'
-     where user_id=$1 and arr_utc is not null and dep_utc is not null and arr_utc <= dep_utc`,
-    [job.user_id],
-  );
-  // If that still contradicts the distance, we don't know the arrival.
-  await pool.query(
-    `update flights set arr_utc = null
-     where user_id=$1 and arr_utc is not null and dep_utc is not null and distance_km is not null
-       and extract(epoch from (arr_utc - dep_utc)) / 3600.0 > 2.0 * (distance_km / 800.0 + 0.5)`,
-    [job.user_id],
-  );
-
   await update("deduplicate", {}, true);
 
-  // ── reconstruct_trips (trip ticket: per-year home, 21-day chaining) ───────
+  // ── reconstruct_trips (per-year home, 21-day chaining, decline to guess) ──
   await update("reconstruct_trips", {}, true);
   await pool.query(`delete from trips where user_id=$1`, [job.user_id]);
   flightIds.sort((a, b) => a.date.localeCompare(b.date));
@@ -324,8 +333,7 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
     Math.abs(new Date(a).getTime() - new Date(b).getTime()) / 86_400_000;
   for (const [, yearFlights] of byYear) {
     const originCounts = new Map<string, number>();
-    for (const f of yearFlights)
-      originCounts.set(f.origin, (originCounts.get(f.origin) ?? 0) + 1);
+    for (const f of yearFlights) originCounts.set(f.origin, (originCounts.get(f.origin) ?? 0) + 1);
     const home = [...originCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
     let chain: typeof flightIds = [];
     const flush = async () => {
@@ -337,8 +345,7 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
           `insert into trips (user_id, title, start_date, end_date) values ($1,$2,$3,$4) returning id`,
           [job.user_id, title, chain[0]!.date, chain[chain.length - 1]!.date],
         );
-        for (const c of chain)
-          await pool.query(`update flights set trip_id=$2 where id=$1`, [c.id, t.id]);
+        for (const c of chain) await pool.query(`update flights set trip_id=$2 where id=$1`, [c.id, t.id]);
         counters.trips = (counters.trips ?? 0) + 1;
       } else {
         for (const c of chain)
