@@ -7,6 +7,19 @@ import { FlightExtractionSchema, type FlightExtraction } from "@trailhead/domain
 
 const client = new Anthropic();
 
+/** The LLM tier being *entirely* unavailable (no credit, bad key) is not a
+ *  per-email failure — it's a systemic one. The pipeline trips a breaker on
+ *  this rather than grinding a whole mailbox into identical errors. */
+export class LlmUnavailableError extends Error {
+  constructor(
+    readonly code: "no_credit" | "auth" | "unknown",
+    message: string,
+  ) {
+    super(message);
+    this.name = "LlmUnavailableError";
+  }
+}
+
 const EXTRACTION_TOOL: Anthropic.Tool = {
   name: "record_flight_extraction",
   description:
@@ -49,19 +62,30 @@ export async function llmExtract(
   from: string,
   body: string,
 ): Promise<FlightExtraction | null> {
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5",
-    max_tokens: 1024,
-    system: SYSTEM,
-    tools: [EXTRACTION_TOOL],
-    tool_choice: { type: "tool", name: "record_flight_extraction" },
-    messages: [
-      {
-        role: "user",
-        content: `From: ${from}\nSubject: ${subject}\n\n${body.slice(0, 30000)}`,
-      },
-    ],
-  });
+  let response: Anthropic.Message;
+  try {
+    response = await client.messages.create({
+      model: "claude-haiku-4-5",
+      max_tokens: 1024,
+      system: SYSTEM,
+      tools: [EXTRACTION_TOOL],
+      tool_choice: { type: "tool", name: "record_flight_extraction" },
+      messages: [
+        {
+          role: "user",
+          content: `From: ${from}\nSubject: ${subject}\n\n${body.slice(0, 30000)}`,
+        },
+      ],
+    });
+  } catch (err) {
+    if (err instanceof Anthropic.AuthenticationError) {
+      throw new LlmUnavailableError("auth", "Anthropic API key rejected");
+    }
+    if (err instanceof Anthropic.BadRequestError && /credit balance/i.test(err.message)) {
+      throw new LlmUnavailableError("no_credit", "Anthropic account has no credit");
+    }
+    throw err; // transient/per-email — the caller records one failure
+  }
   const toolUse = response.content.find(
     (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
   );

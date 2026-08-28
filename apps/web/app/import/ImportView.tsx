@@ -144,12 +144,33 @@ export function ImportView({ initialJob }: { initialJob: JobRow }) {
             {(c.failures ?? 0) > 0 && `${c.failures} email${c.failures === 1 ? "" : "s"} could not be parsed — we'll show you which`}
           </span>
         </div>
+        {c.extraction_degraded ? (
+          <div style={{ marginTop: 18, padding: "12px 14px", borderLeft: "2px solid var(--color-accent)", background: "var(--color-accent-100)" }}>
+            <div style={{ font: "700 10px/1 var(--font-body)", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--color-accent-700)", marginBottom: 8 }}>
+              Incomplete import
+            </div>
+            <p style={{ margin: 0, fontSize: 13, maxWidth: "34em" }}>
+              AI extraction became unavailable partway through, so{" "}
+              {(c.failures ?? 0).toLocaleString()} email
+              {(c.failures ?? 0) === 1 ? "" : "s"} that need it were skipped —
+              emails the deterministic reader handled are still here. Those
+              skipped were left unread, so running the import again picks up
+              exactly them.
+            </p>
+          </div>
+        ) : null}
         {done && (
-          <div style={{ display: "flex", gap: 14, marginTop: 22, borderTop: "2px solid var(--color-text)", paddingTop: 20 }}>
-            <button className="btn btn-primary" disabled title="The dashboard ships in M3">
-              Open my dashboard
-            </button>
-            <span style={{ alignSelf: "center", fontSize: 12 }} className="text-muted">Dashboard lands in M3</span>
+          <div style={{ display: "flex", gap: 14, marginTop: 22, borderTop: "2px solid var(--color-text)", paddingTop: 20, alignItems: "center" }}>
+            {c.extraction_degraded ? (
+              <StartImport label="Run the rest" />
+            ) : (
+              <button className="btn btn-primary" disabled title="The dashboard ships in M3">
+                Open my dashboard
+              </button>
+            )}
+            <span style={{ fontSize: 12 }} className="text-muted">
+              {c.extraction_degraded ? "Resumes with the skipped emails" : "Dashboard lands in M3"}
+            </span>
           </div>
         )}
       </div>

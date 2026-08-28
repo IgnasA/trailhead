@@ -16,7 +16,7 @@ import {
   type FlightExtraction,
 } from "@trailhead/domain";
 import { fetchEmail, listAllMessageIds, refreshAccessToken } from "./gmail.js";
-import { llmExtract } from "./llm.js";
+import { LlmUnavailableError, llmExtract } from "./llm.js";
 import { sendCompletionEmail } from "./email.js";
 
 const execFileP = promisify(execFile);
@@ -88,6 +88,7 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
   counters.flights_found = counters.flights_found ?? 0;
   counters.llm_calls = counters.llm_calls ?? 0;
   const kitineraryBin = process.env.KITINERARY_BIN;
+  let llmAvailable = true;
 
   for (let offset = startOffset; offset < todo.length; offset += BATCH_SIZE) {
     const batch = todo.slice(offset, offset + BATCH_SIZE);
@@ -125,19 +126,42 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
         }
 
         if (!tier && isLikelyFlightEmail(email.subject, email.from)) {
-          if (counters.llm_calls >= LLM_CALL_CAP) {
+          if (!llmAvailable) {
+            // Systemic failure: do NOT cache this email — leaving it uncached
+            // is what makes a later re-run retry exactly these.
+            await fail(gmailId, "llm_unavailable");
+            counters.processed += 1;
+            continue;
+          } else if (counters.llm_calls >= LLM_CALL_CAP) {
             await fail(gmailId, "llm_budget_exhausted");
+            counters.processed += 1;
+            continue;
           } else {
             counters.llm_calls += 1;
-            const result = await llmExtract(
-              email.subject, email.from, email.text || email.html,
-            );
+            let result: FlightExtraction | null = null;
+            try {
+              result = await llmExtract(email.subject, email.from, email.text || email.html);
+            } catch (err) {
+              if (err instanceof LlmUnavailableError) {
+                // Trip the breaker: stop calling the LLM for the rest of the
+                // job and mark the whole import as degraded rather than
+                // burning the mailbox into identical errors.
+                llmAvailable = false;
+                counters.extraction_degraded = 1;
+                console.error(`worker: LLM tier disabled for this job (${err.code}) — continuing deterministic-only`);
+                await fail(gmailId, "llm_unavailable");
+                counters.processed += 1;
+                continue;
+              } else {
+                throw err;
+              }
+            }
             if (result?.isFlightEmail && result.originIata && result.destIata && result.departureDate) {
               extractions = [result];
               tier = "llm";
             } else if (result && !result.isFlightEmail) {
               // negative result is cached via source_emails below — never re-asked
-            } else if (!result) {
+            } else if (!result && llmAvailable) {
               await fail(gmailId, "llm_parse_failed");
             }
           }
