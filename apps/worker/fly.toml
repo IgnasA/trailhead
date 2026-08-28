@@ -1,16 +1,17 @@
-# Fly.io config for the import worker (ADR 0001). App not created yet —
-# `fly launch --no-deploy` from apps/worker/ will adopt this file; then set
-# DATABASE_URL (Supabase pooler URL) with `fly secrets set`.
-app = "trailhead-worker"
-primary_region = "fra"
+# fly.toml app configuration file generated for trailhead-worker on 2026-08-28T22:20:25+03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'trailhead-worker'
+primary_region = 'fra'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  NODE_ENV = "production"
+  NODE_ENV = 'production'
 
-# No public services: the worker only dials out (Postgres, Gmail, Anthropic).
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = 'shared-cpu-1x'
+  memory = '512mb'

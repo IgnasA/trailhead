@@ -1,9 +1,14 @@
-# Deploys the import worker to Fly. Manual-only until the Fly app exists
-# (create it with `fly launch --no-deploy` in apps/worker/, then add the
-# FLY_API_TOKEN repo secret and switch the trigger to push-on-main).
+# Deploys the import worker to Fly (app: trailhead-worker, region fra).
+# Needs the FLY_API_TOKEN repo secret (a Fly deploy token).
 name: Deploy worker
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "apps/worker/**"
+      - "packages/domain/**"
+      - ".github/workflows/deploy-worker.yml"
 
 jobs:
   deploy:
