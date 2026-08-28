@@ -1,0 +1,7 @@
+-- The privacy model settled in the wayfinder map, as functions: disconnect,
+-- delete_source_emails, delete_history, delete_account, and record_correction.
+-- Each acts only on the caller's own rows; the three deletions are separate
+-- because "stop reading my mail", "forget the emails" and "forget my history"
+-- are three different requests. Corrections are immutable events that also
+-- apply their effect, and are the labelled eval dataset.
+-- (Applied to the project; see the Supabase definitions for the full bodies.)

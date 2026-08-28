@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { haversineKm } from "@trailhead/domain";
 import { supabaseServer } from "../../../lib/supabase/server";
+import { EmptyState } from "../ui";
 
 interface Flight {
   id: string;
@@ -112,6 +113,16 @@ export default async function Trips({
 
   // Group by year like the wireframe's "2025 — 29 flights · 11 trips · 74,821 km"
   const years = [...new Set(shownTrips.map((t) => t.start_date.slice(0, 4)))];
+
+  if (shownTrips.length === 0 && unassigned.length === 0) {
+    return (
+      <EmptyState
+        title={year ? `No trips in ${year}.` : "No trips yet."}
+        body="Trips are reconstructed from your flights — once there are flights that chain together, they appear here."
+        action={year ? { href: "/dashboard/trips", label: "All years" } : { href: "/import", label: "Import my mailbox" }}
+      />
+    );
+  }
 
   return (
     <div style={{ padding: "20px 24px", maxWidth: 860 }}>
