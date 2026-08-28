@@ -55,6 +55,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   links; flown/upcoming/cancelled status semantics; derived rebuildable trips
   with corrections as immutable events (= the eval dataset); local wall time
   as source truth. Deliverables: CONTEXT.md + docs/schema.sql.
+- [Privacy and deletion model](tickets/008-privacy-and-deletion-model.md):
+  disconnect revokes and deletes nothing; "delete my emails" and "delete my
+  history" are independent cascades (history rebuildable from retained
+  extractions); account deletion is total; privacy copy has one repo source
+  of truth; failure reasons are categorical, never quoted text.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
@@ -86,7 +91,7 @@ made and the build itself is either done or handed off as an unambiguous plan.
   ("Correct this flight" / "Not a flight" / unparsed-email list feed evals);
   how that harness works waits on the extraction pipeline design.
 - **Empty states and the settings/delete screens** — the wireframes' own "try
-  next" list names them; design + build once the privacy/deletion model closes.
+  next" list names them; design + build slice for the build plan (privacy model now settled).
 - **"Save as image" share export** — rendering approach decided (canvas
   export per the basemap ticket); the build slice waits on the build plan.
 - **Hi-fi visual pass** — the wireframes say it's "a skin, not a re-layout";

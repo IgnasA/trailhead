@@ -51,6 +51,13 @@ it as stats, a route map, and trips.
 - **Gmail Connection** — a user's link to one Gmail mailbox. One per user in
   the MVP; modeled as its own thing so more mailboxes later is an addition,
   not a migration.
+- **Disconnect** — revoking Trailhead's Gmail access (token revoked and
+  destroyed). Stops all reading; deletes nothing.
+- **Delete my emails** — removing all Source Emails and their Extractions.
+  Flights survive; their provenance shows "source deleted".
+- **Delete my history** — removing all Flights, Trips, and Corrections.
+  Source Emails and Extractions survive, so history can be rebuilt without
+  re-reading Gmail. Running both deletions leaves genuinely nothing derived.
 - **Reference data** — public airport and airline tables (codes, names,
   coordinates, timezones) vendored into the repo; not user data. "Countries
   visited" counts ISO country codes of visited airports as-is (territories

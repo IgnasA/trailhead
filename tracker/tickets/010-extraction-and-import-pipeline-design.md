@@ -2,7 +2,7 @@
 title: Extraction and import pipeline design
 label: wayfinder:grilling
 status: open
-assignee:
+assignee: Ignas + Claude (this session)
 blocked-by: [003, 004, 005]
 ---
 
