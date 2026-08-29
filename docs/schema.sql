@@ -99,6 +99,10 @@ create table flights (
   confidence         numeric(3, 2) not null check (confidence between 0 and 1),
   extraction_version integer not null,
   trip_id            uuid references trips (id) on delete set null,
+  -- Which truth source produced this flight; the UI branches on it so a typed
+  -- flight shows "you added this" instead of a confidence score.
+  source             text not null default 'imported'
+                     check (source in ('imported', 'manual')),
   needs_review       boolean not null default false,
   review_reason      text,             -- human-readable "why we didn't guess"
   created_at         timestamptz not null default now(),
@@ -107,6 +111,28 @@ create table flights (
 
 -- Provenance links: which extractions (and so which emails) built a flight.
 -- count(*) per flight = the UI's "merged_from: 3 emails".
+-- The third truth source: flights the person typed in because we missed them.
+-- Read by the rebuild alongside email_extractions, never written by it.
+create table manual_flights (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references auth.users (id) on delete cascade,
+  origin_iata    text not null references airports (iata),
+  dest_iata      text not null references airports (iata),
+  departure_date date not null,
+  -- Not a foreign key: IATA airline codes are recycled, so airlines.iata
+  -- is deliberately not unique.
+  airline_iata   text check (airline_iata ~ '^[A-Z0-9]{2}$'),
+  flight_number  text,
+  dep_local_time time,
+  arr_local_time time,
+  booking_ref    text,
+  price_amount   numeric(10, 2),
+  price_currency text check (price_currency ~ '^[A-Z]{3}$'),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  constraint different_airports check (origin_iata <> dest_iata)
+);
+
 create table flight_sources (
   flight_id     uuid not null references flights (id) on delete cascade,
   extraction_id uuid not null references email_extractions (id) on delete cascade,

@@ -52,6 +52,13 @@ place it *is* distinguishable — its provenance — tells the truth.
   UTC behind and the reveal was estimating all durations. Now 320 hours are
   measured. Batching the inserts is left for the form ticket (~21s as-is).
 
+- [Manual flights, schema and rebuild integration](tickets/024-manual-flights-schema.md):
+  `manual_flights` + `flights.source` + three definer RPCs, applied; the
+  rebuild folds typed flights into the same merge, typed values winning on a
+  shared key while email provenance survives. Verified live in a rolled-back
+  transaction — a typed flight becomes a real Flight, a typed duplicate merges
+  to one row keeping its five email links, and the runaway guard fires at 50.
+
 ## Not yet specified
 
 - **Bulk entry.** Anyone with a hundred flights in another app wants to paste
