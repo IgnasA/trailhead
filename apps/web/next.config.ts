@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Native cross-fade between routes; honours prefers-reduced-motion via CSS.
+  experimental: { viewTransition: true },
   transpilePackages: ["@trailhead/domain", "@trailhead/gmail"],
   webpack: (config) => {
     // The shared packages are ESM-correct TypeScript: they import "./x.js"

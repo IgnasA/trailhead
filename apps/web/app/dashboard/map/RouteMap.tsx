@@ -146,6 +146,8 @@ export function RouteMap({ airports, routes }: { airports: Airport[]; routes: Ro
         bounds.extend(f.geometry.coordinates as [number, number]);
         any = true;
       }
+      // First paint is instant; later filter changes ease (see below), so the
+      // map never teleports when you pick an airline.
       if (any) m.fitBounds(bounds, { padding: 48, duration: 0, maxZoom: 5 });
     });
 
@@ -166,7 +168,18 @@ export function RouteMap({ airports, routes }: { airports: Airport[]; routes: Ro
       activity.set(r.dest, (activity.get(r.dest) ?? 0) + r.count);
     }
     (m.getSource("routes") as GeoJSONSource | undefined)?.setData(buildRoutes(routes, byCode));
-    (m.getSource("airports") as GeoJSONSource | undefined)?.setData(buildAirports(activity, byCode));
+    const airportData = buildAirports(activity, byCode);
+    (m.getSource("airports") as GeoJSONSource | undefined)?.setData(airportData);
+
+    // Re-frame the filtered set with motion rather than a jump.
+    const bounds = new maplibregl.LngLatBounds();
+    let any = false;
+    for (const f of airportData.features) {
+      bounds.extend(f.geometry.coordinates as [number, number]);
+      any = true;
+    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (any) m.fitBounds(bounds, { padding: 48, maxZoom: 5, duration: reduce ? 0 : 600 });
   }, [airports, routes]);
 
   return <div ref={container} style={{ width: "100%", height: "100%", minHeight: 430 }} />;

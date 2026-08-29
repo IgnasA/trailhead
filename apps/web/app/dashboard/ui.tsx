@@ -1,18 +1,17 @@
 // Small shared pieces for the dashboard views (Modernist: rules and grid do
 // the work — no cards, no shadows).
 import Link from "next/link";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 export function KpiCell({
   value, label, compact = false, last = false,
 }: {
   value: number; label: string; compact?: boolean; last?: boolean;
 }) {
-  const shown =
-    compact && value >= 1000 ? `${Math.round(value / 1000).toLocaleString()}k` : value.toLocaleString();
   return (
     <div style={{ padding: "22px 18px", borderRight: last ? "none" : "1px solid var(--color-divider)" }}>
       <div style={{ font: "800 40px/1 var(--font-heading)", letterSpacing: "-.03em" }} className="kpi-value">
-        {shown}
+        <AnimatedNumber value={value} compact={compact} />
       </div>
       <h6 style={{ color: "color-mix(in srgb, var(--color-text) 55%, transparent)", marginTop: 9 }}>{label}</h6>
     </div>
