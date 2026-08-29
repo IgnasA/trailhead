@@ -6,8 +6,8 @@ label: wayfinder:map
 ## Destination
 
 Anyone can add a flight Trailhead didn't find — typed by hand, counting in
-every stat, map, trip and reveal exactly like an imported one. Available on
-both tiers, capped at five on Free. The map is done when a typed flight is
+every stat, map, trip and reveal exactly like an imported one. Ungated on both
+tiers — counted, not capped. The map is done when a typed flight is
 indistinguishable from an extracted one everywhere downstream, and the one
 place it *is* distinguishable — its provenance — tells the truth.
 
@@ -19,11 +19,11 @@ place it *is* distinguishable — its provenance — tells the truth.
   `delete from flights where user_id=$1` and re-derives everything
   ([pipeline.ts:281](../apps/worker/src/pipeline.ts)), and that must stay true.
 - **Tiers today**: Free (€0, everything built) and Premium (€30/yr, *not
-  built*, interest-only — there is no billing anywhere in the product). So the
-  cap at five is a wall with no door behind it, by design: hitting it records
-  a `premium_interest` plan choice, which is the most qualified paying signal
-  the product can collect. See
-  [Extraction cost reduction and the plan step](tickets/022-extraction-cost.md).
+  built*, interest-only — there is no billing anywhere in the product). A cap
+  was charted first at twenty, then at five, and then dropped: it would have
+  truncated the one measurement it existed to produce. Entry is counted and
+  asked about once instead — see [Counting, not capping](tickets/027-counting-not-capping.md)
+  and [Extraction cost reduction and the plan step](tickets/022-extraction-cost.md).
 - **Execution is in scope**: as with the wireframes map, tickets here build
   as well as decide.
 - **Design authority**: the Modernist system, as everywhere else. There is no
@@ -43,8 +43,14 @@ place it *is* distinguishable — its provenance — tells the truth.
 
 <!-- one line per closed ticket: name (linked) + gist -->
 
-_The charting session settled the shape; see each ticket for the detail it
-carries. Nothing closed yet._
+- [Shared history rebuild module](tickets/023-shared-history-rebuild.md):
+  merge, trips and the history rollup extracted to `packages/history` as
+  `rebuildHistory(pool, userId, onStage?)`, callable without a Gmail token;
+  the worker's output is byte-for-byte the same 102 flights / 12 trips /
+  243,891 km. Exposed and fixed a live bug — UTC derivation ran *before* the
+  merge deleted and re-inserted every flight, so no import had ever left a
+  UTC behind and the reveal was estimating all durations. Now 320 hours are
+  measured. Batching the inserts is left for the form ticket (~21s as-is).
 
 ## Not yet specified
 
@@ -85,6 +91,7 @@ carries. Nothing closed yet._
     OTA, a charter operator, a corporate travel desk — is dropped before
     extraction. Silent, and invisible to the person it happens to. If that map
     is ever charted, C is its destination, not A.
-- **Billing for Premium.** The cap makes Premium load-bearing for the first
-  time, which sharpens the question without answering it. Still its own effort
-  after validation, as ruled in the predecessor map.
+- **Billing for Premium.** Manual entry is the first feature to put a real
+  number on who wants more than the free product, which sharpens the question
+  without answering it. Still its own effort after validation, as ruled in the
+  predecessor map.

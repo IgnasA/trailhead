@@ -10,16 +10,12 @@ import pg from "pg";
 import {
   EXTRACTION_VERSION,
   GMAIL_SEARCH_QUERY,
-  TRIP_CHAIN_MAX_GAP_DAYS,
   bodyForExtraction,
-  computeConfidence,
   extractSchemaOrgFlights,
-  haversineKm,
   isLikelyFlightEmail,
-  mergeKey,
-  normalizeFlightNumber,
   type FlightExtraction,
 } from "@trailhead/domain";
+import { rebuildHistory } from "@trailhead/history";
 import { fetchEmail, listAllMessageIds, refreshAccessToken } from "@trailhead/gmail";
 import {
   LlmUnavailableError, collectBatch, llmExtract, submitBatch, type BatchItem,
@@ -237,152 +233,15 @@ export async function runJob(pool: pg.Pool, job: Job): Promise<void> {
   }
   await update("extract", {}, true);
 
-  // Derive UTC from local wall times and airport zones (migrations 0008/0009).
-  await pool.query(
-    `update flights set dep_utc = (dep_local at time zone dep_tz)
-     where user_id=$1 and dep_local is not null and dep_tz is not null`, [job.user_id]);
-  await pool.query(
-    `update flights set arr_utc = (arr_local at time zone arr_tz)
-     where user_id=$1 and arr_local is not null and arr_tz is not null`, [job.user_id]);
-  await pool.query(
-    `update flights set arr_utc = arr_utc + interval '1 day'
-     where user_id=$1 and arr_utc is not null and dep_utc is not null and arr_utc <= dep_utc`, [job.user_id]);
-  await pool.query(
-    `update flights set arr_utc = null
-     where user_id=$1 and arr_utc is not null and dep_utc is not null and distance_km is not null
-       and extract(epoch from (arr_utc - dep_utc)) / 3600.0 > 2.0 * (distance_km / 800.0 + 0.5)`,
-    [job.user_id]);
-
-  // ── deduplicate / merge ───────────────────────────────────────────────────
-  await update("deduplicate", {}, true);
-  const { rows: extractionRows } = await pool.query(
-    `select id, tier, payload from email_extractions where user_id=$1 and extraction_version=$2`,
-    [job.user_id, EXTRACTION_VERSION],
-  );
-  const groups = new Map<string, { ids: string[]; tiers: string[]; ex: FlightExtraction }>();
-  for (const row of extractionRows) {
-    const ex = row.payload as FlightExtraction;
-    if (!ex.originIata || !ex.destIata || !ex.departureDate) continue;
-    const key = mergeKey(ex);
-    const g = groups.get(key);
-    if (g) {
-      g.ids.push(row.id);
-      g.tiers.push(row.tier);
-      for (const k of Object.keys(ex) as (keyof FlightExtraction)[]) {
-        if (g.ex[k] == null && ex[k] != null) (g.ex as Record<string, unknown>)[k] = ex[k];
-      }
-    } else {
-      groups.set(key, { ids: [row.id], tiers: [row.tier], ex: { ...ex } });
-    }
-  }
-
-  const { rows: airportRows } = await pool.query(`select iata, lat, lon, tz from airports`);
-  const airports = new Map(airportRows.map((a) => [a.iata as string, a]));
-
-  await pool.query(`delete from flights where user_id=$1`, [job.user_id]);
-  counters.flights = 0;
-  const today = new Date().toISOString().slice(0, 10);
-  const flightIds: { id: string; date: string; origin: string; dest: string }[] = [];
-  for (const { ids, tiers, ex } of groups.values()) {
-    const origin = airports.get(ex.originIata!);
-    const dest = airports.get(ex.destIata!);
-    if (!origin || !dest) continue;
-    const bestTier = tiers.includes("schema_org") ? "schema_org" : tiers.includes("kitinerary") ? "kitinerary" : "llm";
-    const confidence = computeConfidence(bestTier, ex, {
-      originKnown: true, destKnown: true, corroboratingEmails: ids.length - 1,
-    });
-    const depLocal = ex.depLocalTime ? `${ex.departureDate} ${ex.depLocalTime}` : null;
-    const arrLocal = ex.arrLocalTime ? `${ex.departureDate} ${ex.arrLocalTime}` : null;
-    const distanceKm = haversineKm(origin.lat, origin.lon, dest.lat, dest.lon);
-    const { rows: [f] } = await pool.query(
-      `insert into flights (user_id, status, airline_iata, flight_number, origin_iata, dest_iata,
-         departure_date, dep_local, dep_tz, arr_local, arr_tz, distance_km, booking_ref,
-         price_amount, price_currency, confidence, extraction_version)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) returning id`,
-      [
-        job.user_id,
-        ex.departureDate! <= today ? "flown" : "upcoming",
-        ex.airlineIata, normalizeFlightNumber(ex.flightNumber, ex.airlineIata), ex.originIata, ex.destIata,
-        ex.departureDate, depLocal, origin.tz, arrLocal, dest.tz, distanceKm,
-        ex.bookingRef, ex.priceAmount, ex.priceCurrency, confidence, EXTRACTION_VERSION,
-      ],
-    );
-    for (const exId of ids) {
-      await pool.query(
-        `insert into flight_sources (flight_id, extraction_id) values ($1,$2) on conflict do nothing`,
-        [f.id, exId],
-      );
-    }
-    counters.flights += 1;
-    flightIds.push({ id: f.id, date: ex.departureDate!, origin: ex.originIata!, dest: ex.destIata! });
-  }
-  await update("deduplicate", {}, true);
-
-  // ── reconstruct_trips (per-year home, 21-day chaining, decline to guess) ──
-  await update("reconstruct_trips", {}, true);
-  await pool.query(`delete from trips where user_id=$1`, [job.user_id]);
-  flightIds.sort((a, b) => a.date.localeCompare(b.date));
-  const byYear = new Map<string, typeof flightIds>();
-  for (const f of flightIds) {
-    const y = f.date.slice(0, 4);
-    if (!byYear.has(y)) byYear.set(y, []);
-    byYear.get(y)!.push(f);
-  }
-  counters.trips = 0;
-  const dayDiff = (a: string, b: string) =>
-    Math.abs(new Date(a).getTime() - new Date(b).getTime()) / 86_400_000;
-  for (const [, yearFlights] of byYear) {
-    const originCounts = new Map<string, number>();
-    for (const f of yearFlights) originCounts.set(f.origin, (originCounts.get(f.origin) ?? 0) + 1);
-    const home = [...originCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-    let chain: typeof flightIds = [];
-    const flush = async () => {
-      if (chain.length === 0) return;
-      const closes = chain[chain.length - 1]!.dest === home;
-      if (chain[0]!.origin === home && closes && chain.length >= 2) {
-        const title = [chain[0]!.origin, ...chain.map((c) => c.dest)].join(" → ");
-        const { rows: [t] } = await pool.query(
-          `insert into trips (user_id, title, start_date, end_date) values ($1,$2,$3,$4) returning id`,
-          [job.user_id, title, chain[0]!.date, chain[chain.length - 1]!.date],
-        );
-        for (const c of chain) await pool.query(`update flights set trip_id=$2 where id=$1`, [c.id, t.id]);
-        counters.trips = (counters.trips ?? 0) + 1;
-      } else {
-        for (const c of chain)
-          await pool.query(
-            `update flights set needs_review=true, review_reason=$2 where id=$1`,
-            [c.id, chain.length === 1
-              ? "No connecting or return leg found — we didn't guess."
-              : "Chain doesn't start and end at your home airport — we didn't guess."],
-          );
-      }
-      chain = [];
-    };
-    for (const f of yearFlights) {
-      const prev = chain[chain.length - 1];
-      if (prev && (prev.dest !== f.origin || dayDiff(prev.date, f.date) > TRIP_CHAIN_MAX_GAP_DAYS)) {
-        await flush();
-      }
-      chain.push(f);
-      if (f.dest === home && chain.length >= 2) await flush();
-    }
-    await flush();
-  }
-  await update("reconstruct_trips", {}, true);
-
-  // ── build_history ─────────────────────────────────────────────────────────
-  await update("build_history", {}, true);
-  const { rows: [stats] } = await pool.query(
-    `with flown as (select * from flights where user_id=$1 and status='flown'),
-          visited as (select origin_iata as iata from flown union select dest_iata from flown)
-     select (select count(*)::int from flown) as flights,
-            (select count(distinct a.iso_country)::int from visited v join airports a on a.iata=v.iata) as countries,
-            (select count(*)::int from visited) as airports`,
-    [job.user_id],
-  );
-  counters.total_flights = stats.flights;
-  counters.total_countries = stats.countries;
-  counters.total_airports = stats.airports;
+  // Everything past extraction is deriving the history from what was found.
+  // That derivation is shared with the manual-add path, so the invariant it
+  // enforces — Flights hold no independent truth — has exactly one definition.
+  const built = await rebuildHistory(pool, job.user_id, (s) => update(s, {}, true));
+  counters.flights = built.flights;
+  counters.trips = built.trips;
+  counters.total_flights = built.flown;
+  counters.total_countries = built.countries;
+  counters.total_airports = built.airports;
   await pool.query(
     `update import_jobs set status='completed', stage='build_history', counters=$2,
        batch_current=batch_total, finished_at=now(), updated_at=now() where id=$1`,
