@@ -1,7 +1,7 @@
 ---
 title: M2 import pipeline
 label: wayfinder:task
-status: open
+status: closed
 assignee: Ignas + Claude (this session)
 blocked-by: []
 ---
