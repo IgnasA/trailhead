@@ -8,6 +8,7 @@ export const GMAIL_SCOPE = "gmail.readonly";
 
 export const WE_STORE = [
   "Flight records we extract",
+  "Flights you add yourself",
   "Message ID + subject line",
   "A hash, to avoid re-reading",
 ] as const;
@@ -24,7 +25,12 @@ export const SCOPE_EXPLANATION =
   "That is Google's read-only Gmail permission: Trailhead can search and read messages to find flights, and can never send, modify, or delete anything. Email bodies are fetched only while you look at them and are never kept.";
 
 export interface PrivacyAction {
-  id: "disconnect" | "delete_emails" | "delete_history" | "delete_account";
+  id:
+    | "disconnect"
+    | "delete_emails"
+    | "delete_history"
+    | "delete_manual_flights"
+    | "delete_account";
   title: string;
   summary: string;
   consequence: string;
@@ -32,8 +38,10 @@ export interface PrivacyAction {
   destructive: boolean;
 }
 
-/** Three separate, separately-worded actions — because they are three
- *  different requests, and derived history outlives the emails it came from. */
+/** Separate, separately-worded actions — because they are separate requests.
+ *  Derived history outlives the emails it came from, and flights the person
+ *  typed in outlive both: nothing can rebuild those, so they are never swept
+ *  up by an action whose whole premise is that the data comes back. */
 export const PRIVACY_ACTIONS: PrivacyAction[] = [
   {
     id: "disconnect",
@@ -58,8 +66,17 @@ export const PRIVACY_ACTIONS: PrivacyAction[] = [
     title: "Delete my history",
     summary: "Forget the flights and trips we reconstructed.",
     consequence:
-      "Flights, trips and your corrections are removed. The email records stay, so importing again rebuilds your history without re-reading Gmail. Doing both deletions leaves nothing derived and nothing remembered.",
+      "Flights, trips and your corrections are removed. The email records stay, so importing again rebuilds your history without re-reading Gmail. Flights you added by hand are kept too, and reappear the next time your history is rebuilt — they are yours, not something we reconstructed. Doing every deletion leaves nothing derived and nothing remembered.",
     confirm: "Delete history",
+    destructive: true,
+  },
+  {
+    id: "delete_manual_flights",
+    title: "Delete the flights I added",
+    summary: "Forget the flights you typed in yourself.",
+    consequence:
+      "Every flight you entered by hand is removed, and this one genuinely cannot be undone — there was never an email behind them, so nothing can bring them back. Your imported flights, trips and email records are untouched.",
+    confirm: "Delete added flights",
     destructive: true,
   },
   {
@@ -67,7 +84,7 @@ export const PRIVACY_ACTIONS: PrivacyAction[] = [
     title: "Delete my account",
     summary: "Everything, permanently.",
     consequence:
-      "Your account, your Gmail token, your flights, trips, source-email records and corrections are all deleted. Nothing is kept — not even anonymised. This cannot be undone.",
+      "Your account, your Gmail token, your flights, trips, source-email records, the flights you added yourself and your corrections are all deleted. Nothing is kept — not even anonymised. This cannot be undone.",
     confirm: "Delete everything",
     destructive: true,
   },

@@ -31,3 +31,16 @@ Build the form and put its door where the people who need it are standing.
 - **i18n-ready**: `<input type="date">` so the browser renders the user's own
   format, and no sentences assembled from concatenated fragments.
 - Modernist as everywhere else: rules and grid, no cards, no shadows.
+
+## Added while resolving other tickets
+
+- **Batch the inserts.** The rebuild takes ~21s against the remote database —
+  102 flight inserts plus 198 provenance links, each its own round trip. Fine
+  for a worker, too slow to sit behind a form submit. From
+  [Shared history rebuild module](023-shared-history-rebuild.md).
+- **Rebuild after "Delete my history".** That action removes derived flights
+  but keeps typed ones, which are inputs; they only reappear on the next
+  rebuild, and the copy says so. Once this ticket adds a rebuild endpoint, the
+  action should call it, so the flights the person entered come straight back
+  instead of waiting for an import. From
+  [What deletion means for data we never read](029-privacy-actions-for-typed-flights.md).

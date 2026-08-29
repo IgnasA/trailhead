@@ -12,6 +12,7 @@ const RPC: Record<PrivacyAction["id"], string> = {
   disconnect: "disconnect_gmail",
   delete_emails: "delete_source_emails",
   delete_history: "delete_history",
+  delete_manual_flights: "delete_manual_flights",
   delete_account: "delete_account",
 };
 

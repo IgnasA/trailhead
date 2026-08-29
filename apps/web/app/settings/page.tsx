@@ -11,11 +11,12 @@ export default async function Settings() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/connect");
 
-  const [{ data: connection }, flights, emails, trips] = await Promise.all([
+  const [{ data: connection }, flights, emails, trips, manual] = await Promise.all([
     supabase.from("gmail_connections").select("email_address, status").maybeSingle(),
     supabase.from("flights").select("id", { count: "exact", head: true }),
     supabase.from("source_emails").select("id", { count: "exact", head: true }),
     supabase.from("trips").select("id", { count: "exact", head: true }),
+    supabase.from("manual_flights").select("id", { count: "exact", head: true }),
   ]);
   const connected = connection?.status === "connected";
 
@@ -39,6 +40,9 @@ export default async function Settings() {
             ["Mailbox", connection?.email_address ?? "—"],
             ["Access", connected ? `Connected · ${GMAIL_SCOPE}` : "Disconnected"],
             ["Flights", (flights.count ?? 0).toLocaleString()],
+            // Listed separately because it is the one thing here nothing can
+            // rebuild — the deletion actions below turn on that difference.
+            ["Of those, added by you", (manual.count ?? 0).toLocaleString()],
             ["Trips", (trips.count ?? 0).toLocaleString()],
             ["Source email records", (emails.count ?? 0).toLocaleString()],
           ].map(([label, value]) => (
@@ -86,7 +90,10 @@ export default async function Settings() {
             <DangerAction
               key={action.id}
               action={action}
-              disabled={action.id === "disconnect" && !connected}
+              disabled={
+                (action.id === "disconnect" && !connected) ||
+                (action.id === "delete_manual_flights" && !manual.count)
+              }
             />
           ))}
         </div>

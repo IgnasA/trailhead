@@ -59,6 +59,13 @@ place it *is* distinguishable — its provenance — tells the truth.
   transaction — a typed flight becomes a real Flight, a typed duplicate merges
   to one row keeping its five email links, and the runaway guard fires at 50.
 
+- [What deletion means for data we never read](tickets/029-privacy-actions-for-typed-flights.md):
+  a fourth privacy action for typed flights, "delete my history" keeps them
+  and says so, `WE_STORE` and the settings holdings name them. The deletion
+  spares flights that also have email evidence rather than going by `source`
+  alone — reverting those to `imported` — which is the difference between
+  removing what you typed and destroying what your mail proves.
+
 ## Not yet specified
 
 - **Bulk entry.** Anyone with a hundred flights in another app wants to paste
