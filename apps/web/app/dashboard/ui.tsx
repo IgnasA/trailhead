@@ -1,18 +1,17 @@
 // Small shared pieces for the dashboard views (Modernist: rules and grid do
 // the work — no cards, no shadows).
 import Link from "next/link";
+import { AnimatedNumber } from "./AnimatedNumber";
 
 export function KpiCell({
   value, label, compact = false, last = false,
 }: {
   value: number; label: string; compact?: boolean; last?: boolean;
 }) {
-  const shown =
-    compact && value >= 1000 ? `${Math.round(value / 1000).toLocaleString()}k` : value.toLocaleString();
   return (
     <div style={{ padding: "22px 18px", borderRight: last ? "none" : "1px solid var(--color-divider)" }}>
       <div style={{ font: "800 40px/1 var(--font-heading)", letterSpacing: "-.03em" }} className="kpi-value">
-        {shown}
+        <AnimatedNumber value={value} compact={compact} />
       </div>
       <h6 style={{ color: "color-mix(in srgb, var(--color-text) 55%, transparent)", marginTop: 9 }}>{label}</h6>
     </div>
@@ -54,16 +53,29 @@ export function formatLocal(local: string | null, tz: string | null): string | n
 }
 
 /** Empty states say what to do next, not just that there's nothing here. */
-export function EmptyState({ title, body, action }: { title: string; body: string; action?: { href: string; label: string } }) {
+export function EmptyState({ title, body, action, secondary }: {
+  title: string; body: string;
+  action?: { href: string; label: string };
+  /** The second way out. An empty history usually means the import missed
+   *  things, so "add one yourself" belongs next to "import again". */
+  secondary?: { href: string; label: string };
+}) {
   return (
     <div style={{ padding: "48px 24px", maxWidth: "38em" }}>
       <h3 style={{ margin: 0 }}>{title}</h3>
       <p style={{ marginTop: 10 }} className="text-muted">{body}</p>
-      {action && (
-        <Link href={action.href} className="btn btn-primary" style={{ marginTop: 8, display: "inline-block" }}>
-          {action.label}
-        </Link>
-      )}
+      <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
+        {action && (
+          <Link href={action.href} className="btn btn-primary" style={{ display: "inline-block" }}>
+            {action.label}
+          </Link>
+        )}
+        {secondary && (
+          <Link href={secondary.href} className="btn btn-ghost" style={{ display: "inline-block" }}>
+            {secondary.label}
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

@@ -23,13 +23,13 @@ await client.connect();
 // airports: single upsert via unnest arrays (fast, one round trip)
 const a = Object.entries(airports).filter(([, v]) => v.tz); // schema requires tz
 await client.query(
-  `insert into airports (iata, name, municipality, iso_country, lat, lon, tz)
+  `insert into airports (iata, name, municipality, iso_country, lat, lon, tz, type)
    select * from unnest($1::text[], $2::text[], $3::text[], $4::text[],
-                        $5::float8[], $6::float8[], $7::text[])
+                        $5::float8[], $6::float8[], $7::text[], $8::text[])
    on conflict (iata) do update set
      name = excluded.name, municipality = excluded.municipality,
      iso_country = excluded.iso_country, lat = excluded.lat,
-     lon = excluded.lon, tz = excluded.tz`,
+     lon = excluded.lon, tz = excluded.tz, type = excluded.type`,
   [
     a.map(([k]) => k),
     a.map(([, v]) => v.name),
@@ -38,6 +38,7 @@ await client.query(
     a.map(([, v]) => v.lat),
     a.map(([, v]) => v.lon),
     a.map(([, v]) => v.tz),
+    a.map(([, v]) => v.type ?? null),
   ],
 );
 console.log(`airports: upserted ${a.length} (${Object.keys(airports).length - a.length} skipped without tz)`);

@@ -18,15 +18,26 @@ it as stats, a route map, and trips.
   cancellation / marketing). Never the body — bodies are fetched live on
   demand and never persisted. "Delete my emails" deletes Source Emails;
   Flights survive it by design.
+- **Manual Flight** — a flight the person entered themselves, because we
+  didn't find it. Original input, not derived from anything: it is a *source*
+  the rebuild reads, alongside Extractions, never a Flight row that survives
+  one. Nothing can reconstruct it, which is why "delete my history" leaves it
+  alone. Ungated on every tier.
+- **Source** (of a Flight) — `imported` or `manual`: which truth source
+  produced it. A manual Flight is identical downstream — same stats, map,
+  trips, reveal — and differs only in its provenance, which names the person
+  and the day rather than a confidence score.
 - **Extraction** — the immutable result of running one extraction tier over
   one email: a structured flight payload plus tier and confidence, stamped
   with the Extraction Version that produced it.
 - **Extraction Version** — a monotonically increasing integer identifying the
   extraction pipeline's ruleset. Bumping it allows re-extraction and re-merge
   without touching prior Extractions.
-- **Merge** — the deterministic step that turns Extractions into canonical
-  Flights, keyed on (flight number, route, PNR), with date-change detection
-  superseding rescheduled segments. Re-runnable at any time.
+- **Merge** — the deterministic step that turns Extractions and Manual Flights
+  into canonical Flights, keyed on (flight number, route, PNR), with
+  date-change detection superseding rescheduled segments. Where a Manual
+  Flight and an Extraction share a key they become one Flight and the typed
+  values win, keeping the email provenance. Re-runnable at any time.
 - **Provenance** — the audit trail on every Flight: which Source Emails it
   was merged from, the Extraction Version, and the confidence score
   (computed deterministically from tier + validation, never self-reported by

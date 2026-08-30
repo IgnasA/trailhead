@@ -12,6 +12,7 @@ const RPC: Record<PrivacyAction["id"], string> = {
   disconnect: "disconnect_gmail",
   delete_emails: "delete_source_emails",
   delete_history: "delete_history",
+  delete_manual_flights: "delete_manual_flights",
   delete_account: "delete_account",
 };
 
@@ -45,6 +46,13 @@ export function DangerAction({ action, disabled }: { action: PrivacyAction; disa
         setBusy(false);
         return;
       }
+    }
+
+    // Typed flights survive this one, but they are inputs: they only reappear
+    // once the history is derived again. Rebuilding immediately is the
+    // difference between "kept" and "kept, and visibly still here".
+    if (action.id === "delete_history") {
+      await fetch("/api/rebuild", { method: "POST" }).catch(() => {});
     }
 
     if (action.id === "delete_account") {

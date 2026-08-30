@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "../../../../lib/supabase/server";
+import { ManualFlightActions, type ManualRow } from "./ManualFlightActions";
 import { formatLocal } from "../../ui";
 import { SourceEmail } from "./SourceEmail";
 import { Corrections } from "./Corrections";
@@ -25,12 +26,17 @@ interface ExtractionRow {
 const many = <T,>(v: T | T[] | null | undefined): T[] =>
   v == null ? [] : Array.isArray(v) ? v : [v];
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+function Row({ label, value, missing = "not found in source" }: {
+  label: string; value: React.ReactNode;
+  /** Why the value is absent. "Not found in source" is a claim about an email;
+   *  on a flight someone typed there was never a source to search. */
+  missing?: string;
+}) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "10px 0", borderBottom: "1px solid var(--color-divider)", font: "500 12px/1.4 var(--font-body)" }}>
       <span className="text-muted">{label}</span>
       <span style={{ fontWeight: 600, textAlign: "right" }}>
-        {value ?? <span style={{ color: "color-mix(in srgb, var(--color-text) 45%, transparent)", fontWeight: 500 }}>not found in source</span>}
+        {value ?? <span style={{ color: "color-mix(in srgb, var(--color-text) 45%, transparent)", fontWeight: 500 }}>{missing}</span>}
       </span>
     </div>
   );
@@ -46,6 +52,45 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
     .eq("id", id)
     .maybeSingle();
   if (!flight) notFound();
+
+  // On a typed flight there was no source to search, so saying a field was
+  // "not found in source" would be describing an email that never existed.
+  const absent = flight.source === "manual" ? "you didn't say" : "not found in source";
+
+  // A derived flight carries no pointer to the manual_flights row behind it —
+  // the merge folds them — so the row is found by the same identity the merge
+  // used: where you said you flew, and when. Also the picker's own-airports
+  // list, for the edit form.
+  let manualRow: ManualRow | null = null;
+  let mineAirports: { iata: string; name: string; municipality: string | null; count: number }[] = [];
+  if (flight.source === "manual") {
+    const [{ data: mr }, { data: all }] = await Promise.all([
+      supabase
+        .from("manual_flights")
+        .select("id, origin_iata, dest_iata, departure_date, airline_iata, flight_number, dep_local_time, arr_local_time, booking_ref")
+        .eq("origin_iata", flight.origin_iata)
+        .eq("dest_iata", flight.dest_iata)
+        .eq("departure_date", flight.departure_date)
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("flights").select("origin_iata, dest_iata"),
+    ]);
+    manualRow = (mr as ManualRow | null) ?? null;
+    if (manualRow) {
+      manualRow.dep_local_time = manualRow.dep_local_time?.slice(0, 5) ?? null;
+      manualRow.arr_local_time = manualRow.arr_local_time?.slice(0, 5) ?? null;
+      const counts = new Map<string, number>();
+      for (const f of all ?? []) {
+        counts.set(f.origin_iata, (counts.get(f.origin_iata) ?? 0) + 1);
+        counts.set(f.dest_iata, (counts.get(f.dest_iata) ?? 0) + 1);
+      }
+      const { data: airportRows } = await supabase
+        .from("airports").select("iata, name, municipality").in("iata", [...counts.keys()]);
+      mineAirports = (airportRows ?? [])
+        .map((a) => ({ ...a, count: counts.get(a.iata) ?? 0 }))
+        .sort((a, b) => b.count - a.count);
+    }
+  }
 
   const { data: links } = await supabase
     .from("flight_sources")
@@ -107,13 +152,36 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
           )}
 
           <div style={{ marginTop: 22, borderTop: "2px solid var(--color-text)" }}>
-            <Row label="Departs" value={formatLocal(flight.dep_local, flight.dep_tz)} />
-            <Row label="Arrives" value={formatLocal(flight.arr_local, flight.arr_tz)} />
-            <Row label="Booking ref" value={flight.booking_ref ? <code style={{ fontFamily: "ui-monospace, Menlo, monospace" }}>{flight.booking_ref}</code> : null} />
-            <Row label="Price" value={flight.price_amount ? `${flight.price_currency ?? ""} ${flight.price_amount}`.trim() : null} />
-            <Row label="Seat" value={null} />
+            <Row label="Departs" value={formatLocal(flight.dep_local, flight.dep_tz)} missing={absent} />
+            <Row label="Arrives" value={formatLocal(flight.arr_local, flight.arr_tz)} missing={absent} />
+            <Row label="Booking ref" value={flight.booking_ref ? <code style={{ fontFamily: "ui-monospace, Menlo, monospace" }}>{flight.booking_ref}</code> : null} missing={absent} />
+            <Row label="Price" value={flight.price_amount ? `${flight.price_currency ?? ""} ${flight.price_amount}`.trim() : null} missing={absent} />
+            <Row label="Seat" value={null} missing={absent} />
           </div>
 
+          {/* A flight someone typed has no tier, no version worth showing and
+              no confidence to report: we did not assess them, they were there.
+              Saying "1.00 confidence, llm tier" would be a small lie told in
+              precise-looking type. */}
+          {flight.source === "manual" ? (
+            <div style={{ marginTop: 22, background: "var(--color-neutral-200)", borderLeft: "2px solid var(--color-accent)", padding: "14px 16px" }}>
+              <h6 style={{ color: "var(--color-accent)", marginBottom: 9 }}>Provenance</h6>
+              <p style={{ fontSize: 12.5, margin: 0 }}>
+                You added this flight yourself.
+                {uniqueSources.length > 0 && (
+                  <> A later import found {uniqueSources.length} email{uniqueSources.length === 1 ? "" : "s"} that
+                  match it; where they disagreed with you, we kept your version.</>
+                )}
+              </p>
+              {manualRow && (
+                <ManualFlightActions
+                  manual={manualRow}
+                  mine={mineAirports}
+                  corroborated={uniqueSources.length > 0}
+                />
+              )}
+            </div>
+          ) : (
           <div style={{ marginTop: 22, background: "var(--color-neutral-200)", borderLeft: "2px solid var(--color-accent)", padding: "14px 16px" }}>
             <h6 style={{ color: "var(--color-accent)", marginBottom: 11 }}>Provenance</h6>
             <div style={{ display: "flex", flexDirection: "column", gap: 7, font: "500 11px/1.3 ui-monospace, Menlo, monospace" }}>
@@ -133,8 +201,14 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
               </div>
             </div>
           </div>
+          )}
 
+          {/* Corrections are labelled examples of the extractor being wrong.
+              A typed flight has no extraction to label — its edits are direct
+              (above), and putting them in the eval dataset would poison it. */}
+          {flight.source !== "manual" && (
           <Corrections flightId={flight.id} origin={flight.origin_iata} dest={flight.dest_iata} />
+          )}
         </section>
 
         <section style={{ padding: "26px 24px", background: "var(--color-surface)" }}>
@@ -143,7 +217,9 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
           </h6>
           {uniqueSources.length === 0 ? (
             <p style={{ fontSize: 13 }} className="text-muted">
-              The source email metadata for this flight has been deleted. The flight itself survives — that is by design.
+              {flight.source === "manual"
+                ? "There is no source email — you told us about this flight yourself."
+                : "The source email metadata for this flight has been deleted. The flight itself survives — that is by design."}
             </p>
           ) : (
             <>

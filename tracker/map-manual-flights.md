@@ -1,0 +1,149 @@
+---
+title: Add your own flight data
+label: wayfinder:map
+---
+
+> **Status: destination reached.** Every ticket is closed; what remains
+> deliberately unbuilt is listed under *Not yet specified* (bulk entry, the
+> manual-only front door, editing extracted flights) as fog for a future
+> effort, and *Out of scope* records what was ruled out and why.
+
+## Destination
+
+Anyone can add a flight Trailhead didn't find — typed by hand, counting in
+every stat, map, trip and reveal exactly like an imported one. Ungated on both
+tiers — counted, not capped. The map is done when a typed flight is
+indistinguishable from an extracted one everywhere downstream, and the one
+place it *is* distinguishable — its provenance — tells the truth.
+
+## Notes
+
+- **Domain**: see [CONTEXT.md](../CONTEXT.md). This effort adds a third truth
+  source alongside Extractions and Corrections. The invariant it must not
+  break: **Flights are entirely derived and rebuildable** — the import runs
+  `delete from flights where user_id=$1` and re-derives everything
+  ([pipeline.ts:281](../apps/worker/src/pipeline.ts)), and that must stay true.
+- **Tiers today**: Free (€0, everything built) and Premium (€30/yr, *not
+  built*, interest-only — there is no billing anywhere in the product). A cap
+  was charted first at twenty, then at five, and then dropped: it would have
+  truncated the one measurement it existed to produce. Entry is counted and
+  asked about once instead — see [Counting, not capping](tickets/027-counting-not-capping.md)
+  and [Extraction cost reduction and the plan step](tickets/022-extraction-cost.md).
+- **Execution is in scope**: as with the wireframes map, tickets here build
+  as well as decide.
+- **Design authority**: the Modernist system, as everywhere else. There is no
+  wireframe frame for adding a flight — the ten frames don't cover it — so the
+  one genuinely open visual question (the airport picker) gets a prototype
+  ticket rather than a guess.
+- **i18n-ready, not internationalized**: the form must not add to the debt —
+  `<input type="date">` so the browser renders the user's own format, airports
+  chosen by IATA code and name rather than English text search, and no
+  sentences assembled from concatenated fragments. Actually internationalizing
+  the app is out of scope; see below.
+- **Skills**: grilling + domain-modeling for `grilling` tickets, prototype for
+  `prototype` tickets. Tracker conventions: [tracker/README.md](README.md).
+- Predecessor map: [Implement the Trailhead MVP wireframes](map.md), complete.
+
+## Decisions so far
+
+<!-- one line per closed ticket: name (linked) + gist -->
+
+- [Shared history rebuild module](tickets/023-shared-history-rebuild.md):
+  merge, trips and the history rollup extracted to `packages/history` as
+  `rebuildHistory(pool, userId, onStage?)`, callable without a Gmail token;
+  the worker's output is byte-for-byte the same 102 flights / 12 trips /
+  243,891 km. Exposed and fixed a live bug — UTC derivation ran *before* the
+  merge deleted and re-inserted every flight, so no import had ever left a
+  UTC behind and the reveal was estimating all durations. Now 320 hours are
+  measured. Batching the inserts is left for the form ticket (~21s as-is).
+
+- [Manual flights, schema and rebuild integration](tickets/024-manual-flights-schema.md):
+  `manual_flights` + `flights.source` + three definer RPCs, applied; the
+  rebuild folds typed flights into the same merge, typed values winning on a
+  shared key while email provenance survives. Verified live in a rolled-back
+  transaction — a typed flight becomes a real Flight, a typed duplicate merges
+  to one row keeping its five email links, and the runaway guard fires at 50.
+
+- [What deletion means for data we never read](tickets/029-privacy-actions-for-typed-flights.md):
+  a fourth privacy action for typed flights, "delete my history" keeps them
+  and says so, `WE_STORE` and the settings holdings name them. The deletion
+  spares flights that also have email evidence rather than going by `source`
+  alone — reverting those to `imported` — which is the difference between
+  removing what you typed and destroying what your mail proves.
+
+- [Choosing an airport from nine thousand](tickets/025-airport-picker.md):
+  a keyboard-first combobox whose dropdown opens on your *own* airports before
+  you type, takes a bare code typed blind, splits a pasted route across both
+  fields, and auto-selects a lone candidate. Three prototype findings became
+  requirements: personal history outranks match class (London, Kentucky beat
+  an airport flown five times), re-vendor OurAirports' `type` so Heathrow can
+  outrank Biggin Hill, and cache your own airports so the common case makes no
+  request. Variants live on `prototype/airport-picker`.
+
+- [The add-a-flight form](tickets/026-add-a-flight-form.md): the settled
+  picker, the form, five entry points, and writes that go through the RPC and
+  a full rebuild in one transaction so a failed rebuild takes the write with
+  it. The rebuild's ~300 round trips became 5 (21,081ms → 1,823ms;
+  submit-to-visible 1,524ms) and OurAirports' size class was finally vendored.
+  Verified end to end on the real history and cleaned up after. Fixed a
+  consent-screen drift bug on the way: `connect/page.tsx` hardcoded the "we
+  store" list instead of importing it.
+
+- [Editing and deleting a flight you added](tickets/028-edit-and-delete-your-own.md):
+  Edit and Remove in the detail page's provenance panel, through the same
+  RPC-plus-rebuild transaction, finishing on the list because rebuilds
+  regenerate flight ids. Remove's confirm copy distinguishes "cannot be
+  undone" from "your entry goes, but the flight stays" for corroborated
+  flights. Also gated the Correction buttons off typed flights — the ticket's
+  own boundary, found violated on screen.
+
+- [Counting, not capping](tickets/027-counting-not-capping.md): the running
+  count on the form, the one-time past-ten prompt recording
+  `premium_interest`/`premium_not_now` server-side (migration 15 gives
+  `plan_choices` a `context`), the fifty guard already commented as a
+  runaway-script stop. Verified live with 11 seeded flights, then removed
+  along with the test answer row.
+
+## Not yet specified
+
+- **Bulk entry.** Anyone with a hundred flights in another app wants to paste
+  a CSV, not fill a form a hundred times. Its own column-mapping, validation
+  and preview problem, and far easier to design once single entry has settled
+  what a manual flight *is*. Revisit when this map closes.
+- **A manual-only front door.** Signing up and never connecting Gmail. Today
+  `/plan` and `/dashboard` bounce you to `/connect`, and the landing page, the
+  plan step and the reveal all assume an import happened. A funnel redesign,
+  not a form change — though this map removes the redirect trap so a
+  manual-only user isn't ejected from their own dashboard.
+- **Editing an *extracted* flight.** The Correction path (`correct_field`)
+  exists in the schema and is unused by the UI. Typed flights get real edit and
+  delete in this map; whether extracted flights get the same treatment, or
+  something deliberately different because their values have provenance, isn't
+  sharp enough to ticket yet.
+
+## Out of scope
+
+- **Internationalization**, all three strands, ruled out during charting so the
+  destination stays "you can enter flights we missed". Worth its own map, and
+  the finding that prompted it is worth keeping:
+  - **A. UI language** — copy is hardcoded English in TSX and in
+    `packages/domain/src/privacy.ts`; translating the privacy copy is a
+    legal-review problem, not a translation one.
+  - **B. Locale-correct formatting** — 25 call sites. `formatLocal` hardcodes
+    `Intl.DateTimeFormat("en-GB", …)`, dates render as raw ISO, bare
+    `toLocaleString()` picks up the server locale, €30 is hardcoded. A bug
+    today rather than a missing feature.
+  - **C. Multilingual input, the one that costs data.** The pre-filter's
+    *necessary* evidence is language-neutral (`FLIGHT_NUMBER_PATTERN`,
+    `ROUTE_PATTERN` — IATA codes and digits), and `GMAIL_SEARCH_QUERY` leans on
+    `category:travel`, which is Gmail's own language-independent
+    classification. But the *confirming* half is
+    `AIRLINE_SENDERS` (30 domains) **or** `FLIGHT_KEYWORDS` (English words
+    only), so a non-English booking from a sender not on that list — a regional
+    OTA, a charter operator, a corporate travel desk — is dropped before
+    extraction. Silent, and invisible to the person it happens to. If that map
+    is ever charted, C is its destination, not A.
+- **Billing for Premium.** Manual entry is the first feature to put a real
+  number on who wants more than the free product, which sharpens the question
+  without answering it. Still its own effort after validation, as ruled in the
+  predecessor map.

@@ -120,6 +120,7 @@ export default async function Trips({
         title={year ? `No trips in ${year}.` : "No trips yet."}
         body="Trips are reconstructed from your flights — once there are flights that chain together, they appear here."
         action={year ? { href: "/dashboard/trips", label: "All years" } : { href: "/import", label: "Import my mailbox" }}
+        secondary={{ href: "/dashboard/flights", label: "Add a flight myself" }}
       />
     );
   }

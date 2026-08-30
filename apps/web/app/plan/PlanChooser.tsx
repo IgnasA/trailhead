@@ -14,6 +14,7 @@ const FREE = [
   "Trips reconstructed from your flights",
   "The world map and every statistic",
   "Provenance on every flight, and the original email on demand",
+  "Add flights we missed, or that predate your mailbox",
 ];
 
 const PREMIUM = [

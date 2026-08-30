@@ -29,6 +29,9 @@ importers:
       '@trailhead/gmail':
         specifier: workspace:*
         version: link:../../packages/gmail
+      '@trailhead/history':
+        specifier: workspace:*
+        version: link:../../packages/history
       '@turf/great-circle':
         specifier: 7.3.1
         version: 7.3.1
@@ -78,6 +81,9 @@ importers:
       '@trailhead/gmail':
         specifier: workspace:*
         version: link:../../packages/gmail
+      '@trailhead/history':
+        specifier: workspace:*
+        version: link:../../packages/history
       pg:
         specifier: ^8.13.0
         version: 8.23.0
@@ -109,6 +115,19 @@ importers:
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.12)
 
   packages/gmail:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.1
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/history:
+    dependencies:
+      '@trailhead/domain':
+        specifier: workspace:*
+        version: link:../domain
     devDependencies:
       '@types/node':
         specifier: ^22.0.0

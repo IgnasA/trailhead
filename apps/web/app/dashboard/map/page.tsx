@@ -43,9 +43,11 @@ export default async function MapPage({
   const routes = [...routeCounts.values()];
 
   const codes = [...new Set(flights.flatMap((f) => [f.origin_iata, f.dest_iata]))];
-  const { data: airportRows } = codes.length
+  const airportQuery = codes.length
     ? await supabase.from("airports").select("iata, name, lat, lon, iso_country").in("iata", codes)
-    : { data: [] };
+    : { data: [], error: null };
+  if (airportQuery.error) console.error("[map] airports query failed:", airportQuery.error.message, "codes:", codes.length);
+  const airportRows = airportQuery.data;
   const airports = (airportRows ?? []) as (Airport & { iso_country: string })[];
   const countries = new Set(airports.map((a) => a.iso_country)).size;
 

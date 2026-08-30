@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@trailhead/domain", "@trailhead/gmail"],
+  // Native cross-fade between routes; honours prefers-reduced-motion via CSS.
+  experimental: { viewTransition: true },
+  transpilePackages: ["@trailhead/domain", "@trailhead/gmail", "@trailhead/history"],
   webpack: (config) => {
     // The shared packages are ESM-correct TypeScript: they import "./x.js"
     // referring to x.ts. Teach the bundler that mapping.

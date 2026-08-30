@@ -13,6 +13,7 @@ That is Google's read-only Gmail permission: Trailhead can search and read messa
 ## What we store
 
 - Flight records we extract
+- Flights you add yourself
 - Message ID + subject line
 - A hash, to avoid re-reading
 
@@ -40,11 +41,17 @@ Every stored message ID, subject line and hash goes, along with the extractions 
 
 Forget the flights and trips we reconstructed.
 
-Flights, trips and your corrections are removed. The email records stay, so importing again rebuilds your history without re-reading Gmail. Doing both deletions leaves nothing derived and nothing remembered.
+Flights, trips and your corrections are removed. The email records stay, so importing again rebuilds your history without re-reading Gmail. Flights you added by hand are kept too, and reappear the next time your history is rebuilt — they are yours, not something we reconstructed. Doing every deletion leaves nothing derived and nothing remembered.
+
+### Delete the flights I added
+
+Forget the flights you typed in yourself.
+
+Every flight you entered by hand is removed, and this one genuinely cannot be undone — there was never an email behind them, so nothing can bring them back. Your imported flights, trips and email records are untouched.
 
 ### Delete my account
 
 Everything, permanently.
 
-Your account, your Gmail token, your flights, trips, source-email records and corrections are all deleted. Nothing is kept — not even anonymised. This cannot be undone.
+Your account, your Gmail token, your flights, trips, source-email records, the flights you added yourself and your corrections are all deleted. Nothing is kept — not even anonymised. This cannot be undone.
 

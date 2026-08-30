@@ -138,8 +138,17 @@ export function ImportView({ initialJob }: { initialJob: JobRow }) {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 22, height: 10, background: "var(--color-neutral-300)", display: "flex" }}>
-          <div style={{ width: `${pct}%`, background: failed ? "var(--color-neutral-500)" : "var(--color-accent)", transition: "width .6s" }} />
+        {/* scaleX rather than width: animating width relayouts on every frame. */}
+        <div style={{ marginTop: 22, height: 10, background: "var(--color-neutral-300)", overflow: "hidden" }}>
+          <div
+            style={{
+              height: "100%",
+              background: failed ? "var(--color-neutral-500)" : "var(--color-accent)",
+              transform: `scaleX(${pct / 100})`,
+              transformOrigin: "left",
+              transition: "transform .6s cubic-bezier(.2,.8,.2,1)",
+            }}
+          />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, font: "600 11px/1.4 var(--font-body)", color: "color-mix(in srgb, var(--color-text) 55%, transparent)" }}>
           <span>{pct}%</span>

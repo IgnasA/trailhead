@@ -17,12 +17,23 @@ export default async function Overview({
   const [{ data: stats }, { data: perYear }, { data: recent }] = await Promise.all([
     supabase.rpc("dashboard_stats", { p_year: yearNum }),
     supabase.rpc("flights_per_year"),
-    supabase
-      .from("flights")
-      .select("id, origin_iata, dest_iata, departure_date, airline_iata, flight_number, distance_km")
-      .eq("status", "flown")
-      .order("departure_date", { ascending: false })
-      .limit(6),
+    // The year filter is global: the recent list has to honour it too, or the
+    // page shows 2026 flights while claiming to be filtered to 2025.
+    (year
+      ? supabase
+          .from("flights")
+          .select("id, origin_iata, dest_iata, departure_date, airline_iata, flight_number, distance_km")
+          .eq("status", "flown")
+          .gte("departure_date", `${year}-01-01`)
+          .lte("departure_date", `${year}-12-31`)
+          .order("departure_date", { ascending: false })
+          .limit(6)
+      : supabase
+          .from("flights")
+          .select("id, origin_iata, dest_iata, departure_date, airline_iata, flight_number, distance_km")
+          .eq("status", "flown")
+          .order("departure_date", { ascending: false })
+          .limit(6)),
   ]);
 
   const s = (stats ?? {}) as Record<string, number>;
@@ -40,6 +51,7 @@ export default async function Overview({
             : "Once an import finishes, your history appears here — flights, trips, countries and the map."
         }
         action={year ? { href: "/dashboard", label: "All years" } : { href: "/import", label: "Import my mailbox" }}
+        secondary={{ href: "/dashboard/flights", label: "Add a flight myself" }}
       />
     );
   }
@@ -62,16 +74,18 @@ export default async function Overview({
             Flights per year
           </h6>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 12, height: 120, borderBottom: "2px solid var(--color-text)" }}>
-            {years.map((y) => (
+            {years.map((y, i) => (
               <Link
                 key={y.year}
                 href={`/dashboard?year=${y.year}`}
                 title={`${y.year}: ${y.flights} flights`}
+                className="year-bar"
                 style={{
                   flex: 1,
                   height: `${Math.max(4, (y.flights / maxFlights) * 100)}%`,
                   background: y.year === busiest?.year ? "var(--color-accent)" : "var(--color-neutral-300)",
                   display: "block",
+                  animationDelay: `${i * 40}ms`,
                 }}
               />
             ))}

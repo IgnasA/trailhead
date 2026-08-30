@@ -1,0 +1,55 @@
+/* App-level rules layered on the vendored design system — kept separate so
+   modernist.css stays re-syncable from the design project. */
+
+:root { --font-heading: var(--font-archivo), system-ui, sans-serif;
+        --font-body: var(--font-archivo), system-ui, sans-serif; }
+
+/* Interface states are already themed by the design system; they just
+   snapped. Short transitions on colour only — nothing that moves. */
+.btn, .table tbody tr, .input { transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease; }
+
+/* ── Trailhead responsive rules (frame 1j: the dashboard on mobile) ────────
+   The Modernist grid is the layout; on narrow screens the columns stack and
+   the KPI row becomes a 2-up grid rather than five unreadable slivers. */
+@media (max-width: 760px) {
+  .split { grid-template-columns: 1fr !important; }
+  .split > section { border-right: none !important; }
+  .kpi-row { grid-template-columns: 1fr 1fr !important; }
+  .kpi-row > div { border-bottom: 1px solid var(--color-divider); }
+  .kpi-row > div:nth-child(odd) { border-right: 1px solid var(--color-divider) !important; }
+  .kpi-row > div:nth-child(even) { border-right: none !important; }
+  .kpi-value { font-size: 28px !important; }
+  /* Five cells in a 2-up grid leaves a dead cell — let the last one span. */
+  .kpi-row > div:last-child:nth-child(odd) { grid-column: span 2; border-right: none !important; }
+  .hero-grid { grid-template-columns: 1fr !important; }
+  /* Frame 1i: four superlatives don't fit a phone in one row. */
+  .supers { grid-template-columns: 1fr 1fr !important; }
+  .supers > div { border-right: none !important; padding-left: 0 !important; }
+  .hero-grid > div:first-child { border-right: none !important; }
+}
+
+/* Route changes cross-fade rather than hard-swapping. Structural, brief, and
+   fully disabled when the viewer asks for reduced motion. */
+@view-transition { navigation: auto; }
+::view-transition-group(root) { animation-duration: 180ms; }
+::view-transition-old(root),
+::view-transition-new(root) { animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* The per-year bars grow into place once and answer the pointer — they are
+   also the year picker, so they need to look pressable. */
+@keyframes bar-rise { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+.year-bar {
+  transform-origin: bottom;
+  animation: bar-rise 420ms cubic-bezier(.2, .8, .2, 1) both;
+  transition: background-color 120ms ease;
+}
+.year-bar:hover { background: var(--color-text) !important; }

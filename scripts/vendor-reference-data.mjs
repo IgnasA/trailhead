@@ -65,6 +65,10 @@ for (const line of csv.slice(1)) {
     name: f[col.name],
     city: f[col.municipality] || null,
     country: f[col.iso_country], // ISO 3166-1 alpha-2 + unofficial (XK)
+    // Size class (large_airport … heliport). Read here since the beginning to
+    // drop closed airports, and formerly discarded — but it is the only signal
+    // that can rank Heathrow above Biggin Hill when someone types "London".
+    type,
     lat, lon, tz,
   };
 }

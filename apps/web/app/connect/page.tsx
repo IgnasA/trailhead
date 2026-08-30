@@ -1,7 +1,11 @@
 // Frame 1b — our trust screen, shown BEFORE Google's consent dialog.
-// Copy here must match docs/privacy.md word-for-word once that exists (the
-// privacy ticket makes drift structurally impossible in M6).
+// The lists come from packages/domain/src/privacy.ts, the same source the
+// privacy page and docs/privacy.md render from, because the privacy ticket
+// requires this screen to match them word for word. They were hardcoded here
+// until adding manual flights changed "we store" and this screen alone kept
+// the old text — which is exactly the drift that rule exists to prevent.
 import Link from "next/link";
+import { WE_NEVER_STORE, WE_STORE } from "@trailhead/domain";
 import { ConnectButton } from "./ConnectButton";
 
 const ERRORS: Record<string, string> = {
@@ -38,7 +42,7 @@ export default async function ConnectPage({
         <div style={{ marginTop: 26, borderTop: "2px solid var(--color-text)", display: "grid", gridTemplateColumns: "1fr 1fr" }}>
           <div style={{ padding: "16px 16px 16px 0", borderRight: "1px solid var(--color-divider)" }}>
             <h6 style={{ color: "var(--color-accent)", marginBottom: 12 }}>We store</h6>
-            {["Flight records we extract", "Message ID + subject line", "A hash, to avoid re-reading"].map((t) => (
+            {WE_STORE.map((t) => (
               <div key={t} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
                 <span style={{ width: 8, height: 8, background: "var(--color-text)", flex: "none" }} />
                 <span style={{ font: "500 12px/1.3 var(--font-body)" }}>{t}</span>
@@ -49,7 +53,7 @@ export default async function ConnectPage({
             <h6 style={{ color: "color-mix(in srgb, var(--color-text) 50%, transparent)", marginBottom: 12 }}>
               We never store
             </h6>
-            {["Email bodies", "Non-flight mail, at all", "Attachments"].map((t) => (
+            {WE_NEVER_STORE.map((t) => (
               <div key={t} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
                 <span style={{ width: 8, height: 8, border: "1.5px solid var(--color-neutral-500)", flex: "none" }} />
                 <span style={{ font: "500 12px/1.3 var(--font-body)", color: "color-mix(in srgb, var(--color-text) 60%, transparent)" }}>{t}</span>
