@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "../../../../lib/supabase/server";
+import { ManualFlightActions, type ManualRow } from "./ManualFlightActions";
 import { formatLocal } from "../../ui";
 import { SourceEmail } from "./SourceEmail";
 import { Corrections } from "./Corrections";
@@ -55,6 +56,41 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
   // On a typed flight there was no source to search, so saying a field was
   // "not found in source" would be describing an email that never existed.
   const absent = flight.source === "manual" ? "you didn't say" : "not found in source";
+
+  // A derived flight carries no pointer to the manual_flights row behind it —
+  // the merge folds them — so the row is found by the same identity the merge
+  // used: where you said you flew, and when. Also the picker's own-airports
+  // list, for the edit form.
+  let manualRow: ManualRow | null = null;
+  let mineAirports: { iata: string; name: string; municipality: string | null; count: number }[] = [];
+  if (flight.source === "manual") {
+    const [{ data: mr }, { data: all }] = await Promise.all([
+      supabase
+        .from("manual_flights")
+        .select("id, origin_iata, dest_iata, departure_date, airline_iata, flight_number, dep_local_time, arr_local_time, booking_ref")
+        .eq("origin_iata", flight.origin_iata)
+        .eq("dest_iata", flight.dest_iata)
+        .eq("departure_date", flight.departure_date)
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("flights").select("origin_iata, dest_iata"),
+    ]);
+    manualRow = (mr as ManualRow | null) ?? null;
+    if (manualRow) {
+      manualRow.dep_local_time = manualRow.dep_local_time?.slice(0, 5) ?? null;
+      manualRow.arr_local_time = manualRow.arr_local_time?.slice(0, 5) ?? null;
+      const counts = new Map<string, number>();
+      for (const f of all ?? []) {
+        counts.set(f.origin_iata, (counts.get(f.origin_iata) ?? 0) + 1);
+        counts.set(f.dest_iata, (counts.get(f.dest_iata) ?? 0) + 1);
+      }
+      const { data: airportRows } = await supabase
+        .from("airports").select("iata, name, municipality").in("iata", [...counts.keys()]);
+      mineAirports = (airportRows ?? [])
+        .map((a) => ({ ...a, count: counts.get(a.iata) ?? 0 }))
+        .sort((a, b) => b.count - a.count);
+    }
+  }
 
   const { data: links } = await supabase
     .from("flight_sources")
@@ -137,6 +173,13 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
                   match it; where they disagreed with you, we kept your version.</>
                 )}
               </p>
+              {manualRow && (
+                <ManualFlightActions
+                  manual={manualRow}
+                  mine={mineAirports}
+                  corroborated={uniqueSources.length > 0}
+                />
+              )}
             </div>
           ) : (
           <div style={{ marginTop: 22, background: "var(--color-neutral-200)", borderLeft: "2px solid var(--color-accent)", padding: "14px 16px" }}>
@@ -160,7 +203,12 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
           </div>
           )}
 
+          {/* Corrections are labelled examples of the extractor being wrong.
+              A typed flight has no extraction to label — its edits are direct
+              (above), and putting them in the eval dataset would poison it. */}
+          {flight.source !== "manual" && (
           <Corrections flightId={flight.id} origin={flight.origin_iata} dest={flight.dest_iata} />
+          )}
         </section>
 
         <section style={{ padding: "26px 24px", background: "var(--color-surface)" }}>

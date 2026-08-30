@@ -84,6 +84,14 @@ place it *is* distinguishable — its provenance — tells the truth.
   consent-screen drift bug on the way: `connect/page.tsx` hardcoded the "we
   store" list instead of importing it.
 
+- [Editing and deleting a flight you added](tickets/028-edit-and-delete-your-own.md):
+  Edit and Remove in the detail page's provenance panel, through the same
+  RPC-plus-rebuild transaction, finishing on the list because rebuilds
+  regenerate flight ids. Remove's confirm copy distinguishes "cannot be
+  undone" from "your entry goes, but the flight stays" for corroborated
+  flights. Also gated the Correction buttons off typed flights — the ticket's
+  own boundary, found violated on screen.
+
 ## Not yet specified
 
 - **Bulk entry.** Anyone with a hundred flights in another app wants to paste
