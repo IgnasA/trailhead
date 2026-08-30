@@ -9,7 +9,7 @@ directory as the tracker. (To wire up a real tracker, run
 - **Maps** are the root-level `map*.md` files, each labelled `wayfinder:map`.
   One per effort, in the order they were charted:
   - [Implement the Trailhead MVP wireframes](map.md) — complete.
-  - [Add your own flight data](map-manual-flights.md) — active.
+  - [Add your own flight data](map-manual-flights.md) — complete.
 - **Tickets** are files in `tickets/`, named `NNN-slug.md`. The `NNN` number is
   the ticket's issue id and is unique across every map; the `title` in its
   frontmatter is its name. Always refer to tickets by name, linking the file.

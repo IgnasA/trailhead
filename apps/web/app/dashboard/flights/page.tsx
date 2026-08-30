@@ -21,9 +21,12 @@ export default async function Flights({
   // The picker opens on these before a key is pressed, so they travel with the
   // page rather than costing a request. Counted across the whole history, not
   // the filtered year — the airports you fly do not change by filter.
-  const [{ data: all }, { count: manualCount }] = await Promise.all([
+  const [{ data: all }, { count: manualCount }, { data: planRows }] = await Promise.all([
     supabase.from("flights").select("origin_iata, dest_iata"),
     supabase.from("manual_flights").select("id", { count: "exact", head: true }),
+    // Whether the past-ten prompt was already answered — either way. Asked
+    // once means remembered server-side, or it nags on every device.
+    supabase.from("plan_choices").select("plan").in("plan", ["premium_interest", "premium_not_now"]),
   ]);
   const counts = new Map<string, number>();
   for (const f of all ?? []) {
@@ -39,7 +42,13 @@ export default async function Flights({
 
   return (
     <>
-    <AddFlight mine={mine} count={manualCount ?? 0} />
+    <AddFlight
+      mine={mine}
+      count={manualCount ?? 0}
+      // Past ten typed flights, and never asked before (a plan-step interest
+      // or a prior dismissal both count as asked).
+      showPrompt={(manualCount ?? 0) > 10 && (planRows ?? []).length === 0}
+    />
     <div style={{ padding: "20px 24px", overflowX: "auto" }}>
       <table className="table">
         <thead>

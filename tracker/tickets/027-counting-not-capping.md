@@ -1,8 +1,8 @@
 ---
 title: Counting, not capping
 label: wayfinder:task
-status: open
-assignee:
+status: closed
+assignee: Ignas + Claude (this session)
 map: ../map-manual-flights.md
 blocked-by: [26]
 ---
@@ -47,3 +47,33 @@ What to build:
   a finding worth acting on rather than a limit worth enforcing.
 - The Free column's copy gains manual entry with no asterisk, because there
   now isn't one.
+
+## Resolution
+
+Built as specified, with the pieces that already existed left where earlier
+tickets put them:
+
+- **The running count** shows on the collapsed strip — "You've added 11
+  flights yourself." — informational, no countdown, no ceiling named.
+- **The one-time prompt** appears past ten typed flights: "Automatic
+  re-import … is something we're considering charging for. Nothing exists to
+  buy yet", with "Tell me when it exists" / "Not for me". Either answer is
+  recorded server-side via `choose_plan`, so no device ever shows it twice; a
+  plan-step `premium_interest` also suppresses it (they already said yes).
+- **`plan_choices` grew** `premium_not_now` and a `context` column
+  (`plan_step` | `manual_flights`) — migration 15 — so the two interest
+  sources are distinguishable but countable together, and "not now" is itself
+  signal. `choose_plan` was re-signatured with a defaulted `p_context`; the
+  plan step's existing 2-arg call still resolves, verified.
+- **The guard at fifty** already sat in `add_manual_flight` (migration 12),
+  commented as what it is — a stop for a runaway script, not a paywall — and
+  the form ticket's 409 copy already treats hitting it as a finding.
+- **The Free column** already carries "Add flights we missed, or that predate
+  your mailbox", with no asterisk, because there isn't one.
+
+**Verified live**: seeded 11 typed flights (113 total), saw the count strip
+and the prompt render; answered "Not for me"; the row landed as
+`premium_not_now` / `manual_flights`; on reload the count remained and the
+prompt did not. All test data removed afterwards — including the test answer
+row, which was mine, not the user's — history restored to 102 / 12 / 30 / 49
+and `plan_choices` to its single real row.

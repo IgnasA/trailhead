@@ -7,9 +7,15 @@
 // exactly as it is for an extraction.
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabaseBrowser } from "../../../lib/supabase/client";
 import { AirportPicker, type MyAirport } from "./AirportPicker";
 
-export function AddFlight({ mine, count }: { mine: MyAirport[]; count: number }) {
+export function AddFlight({ mine, count, showPrompt }: {
+  mine: MyAirport[];
+  count: number;
+  /** Past ten typed flights and never asked before — see InterestPrompt. */
+  showPrompt: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [more, setMore] = useState(false);
   const [origin, setOrigin] = useState<string | null>(null);
@@ -51,6 +57,7 @@ export function AddFlight({ mine, count }: { mine: MyAirport[]; count: number })
 
   if (!open) {
     return (
+      <>
       <div style={{ padding: "14px 24px", borderBottom: "1px solid var(--color-divider)", display: "flex", gap: 14, alignItems: "baseline", flexWrap: "wrap" }}>
         <button className="btn btn-primary" onClick={() => setOpen(true)}>Add a flight</button>
         <span style={{ fontSize: 12 }} className="text-muted">
@@ -59,6 +66,8 @@ export function AddFlight({ mine, count }: { mine: MyAirport[]; count: number })
             : "Flights we missed, or that predate your mailbox."}
         </span>
       </div>
+      {showPrompt && <InterestPrompt />}
+      </>
     );
   }
 
@@ -134,6 +143,44 @@ export function AddFlight({ mine, count }: { mine: MyAirport[]; count: number })
           </span>
         )}
         {error && <span style={{ fontSize: 12.5, color: "var(--color-accent)" }}>{error}</span>}
+      </div>
+      {showPrompt && <InterestPrompt />}
+    </div>
+  );
+}
+
+/** Asked once, past ten typed flights — never a wall, never repeated. The
+ *  answer is recorded server-side either way, so no device sees this twice.
+ *  This is the counting-not-capping ticket's whole point: someone who typed
+ *  eleven flights by hand is the most qualified paying signal the product
+ *  can collect, and a cap would have truncated exactly this measurement. */
+function InterestPrompt() {
+  const [answered, setAnswered] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function answer(plan: "premium_interest" | "premium_not_now") {
+    setBusy(true);
+    await supabaseBrowser().rpc("choose_plan", {
+      p_plan: plan, p_candidates: null, p_context: "manual_flights",
+    });
+    setAnswered(true);
+  }
+
+  if (answered) return null;
+  return (
+    <div style={{ padding: "14px 24px", borderBottom: "1px solid var(--color-divider)", background: "var(--color-neutral-200)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+      <p style={{ fontSize: 12.5, margin: 0, maxWidth: "40em" }}>
+        You&rsquo;ve added more than ten flights by hand. Automatic re-import — new
+        bookings appearing on their own — is something we&rsquo;re considering
+        charging for. Nothing exists to buy yet.
+      </p>
+      <div style={{ display: "flex", gap: 10 }}>
+        <button className="btn btn-primary" style={{ fontSize: 12 }} disabled={busy} onClick={() => answer("premium_interest")}>
+          Tell me when it exists
+        </button>
+        <button className="btn btn-ghost" style={{ fontSize: 12 }} disabled={busy} onClick={() => answer("premium_not_now")}>
+          Not for me
+        </button>
       </div>
     </div>
   );

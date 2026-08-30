@@ -3,6 +3,11 @@ title: Add your own flight data
 label: wayfinder:map
 ---
 
+> **Status: destination reached.** Every ticket is closed; what remains
+> deliberately unbuilt is listed under *Not yet specified* (bulk entry, the
+> manual-only front door, editing extracted flights) as fog for a future
+> effort, and *Out of scope* records what was ruled out and why.
+
 ## Destination
 
 Anyone can add a flight Trailhead didn't find — typed by hand, counting in
@@ -91,6 +96,13 @@ place it *is* distinguishable — its provenance — tells the truth.
   undone" from "your entry goes, but the flight stays" for corroborated
   flights. Also gated the Correction buttons off typed flights — the ticket's
   own boundary, found violated on screen.
+
+- [Counting, not capping](tickets/027-counting-not-capping.md): the running
+  count on the form, the one-time past-ten prompt recording
+  `premium_interest`/`premium_not_now` server-side (migration 15 gives
+  `plan_choices` a `context`), the fifty guard already commented as a
+  runaway-script stop. Verified live with 11 seeded flights, then removed
+  along with the test answer row.
 
 ## Not yet specified
 
