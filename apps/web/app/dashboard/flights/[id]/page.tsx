@@ -25,12 +25,17 @@ interface ExtractionRow {
 const many = <T,>(v: T | T[] | null | undefined): T[] =>
   v == null ? [] : Array.isArray(v) ? v : [v];
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+function Row({ label, value, missing = "not found in source" }: {
+  label: string; value: React.ReactNode;
+  /** Why the value is absent. "Not found in source" is a claim about an email;
+   *  on a flight someone typed there was never a source to search. */
+  missing?: string;
+}) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "10px 0", borderBottom: "1px solid var(--color-divider)", font: "500 12px/1.4 var(--font-body)" }}>
       <span className="text-muted">{label}</span>
       <span style={{ fontWeight: 600, textAlign: "right" }}>
-        {value ?? <span style={{ color: "color-mix(in srgb, var(--color-text) 45%, transparent)", fontWeight: 500 }}>not found in source</span>}
+        {value ?? <span style={{ color: "color-mix(in srgb, var(--color-text) 45%, transparent)", fontWeight: 500 }}>{missing}</span>}
       </span>
     </div>
   );
@@ -46,6 +51,10 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
     .eq("id", id)
     .maybeSingle();
   if (!flight) notFound();
+
+  // On a typed flight there was no source to search, so saying a field was
+  // "not found in source" would be describing an email that never existed.
+  const absent = flight.source === "manual" ? "you didn't say" : "not found in source";
 
   const { data: links } = await supabase
     .from("flight_sources")
@@ -107,11 +116,11 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
           )}
 
           <div style={{ marginTop: 22, borderTop: "2px solid var(--color-text)" }}>
-            <Row label="Departs" value={formatLocal(flight.dep_local, flight.dep_tz)} />
-            <Row label="Arrives" value={formatLocal(flight.arr_local, flight.arr_tz)} />
-            <Row label="Booking ref" value={flight.booking_ref ? <code style={{ fontFamily: "ui-monospace, Menlo, monospace" }}>{flight.booking_ref}</code> : null} />
-            <Row label="Price" value={flight.price_amount ? `${flight.price_currency ?? ""} ${flight.price_amount}`.trim() : null} />
-            <Row label="Seat" value={null} />
+            <Row label="Departs" value={formatLocal(flight.dep_local, flight.dep_tz)} missing={absent} />
+            <Row label="Arrives" value={formatLocal(flight.arr_local, flight.arr_tz)} missing={absent} />
+            <Row label="Booking ref" value={flight.booking_ref ? <code style={{ fontFamily: "ui-monospace, Menlo, monospace" }}>{flight.booking_ref}</code> : null} missing={absent} />
+            <Row label="Price" value={flight.price_amount ? `${flight.price_currency ?? ""} ${flight.price_amount}`.trim() : null} missing={absent} />
+            <Row label="Seat" value={null} missing={absent} />
           </div>
 
           {/* A flight someone typed has no tier, no version worth showing and

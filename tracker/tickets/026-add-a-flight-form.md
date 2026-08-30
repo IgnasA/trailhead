@@ -1,7 +1,7 @@
 ---
 title: The add-a-flight form
 label: wayfinder:task
-status: open
+status: closed
 assignee: Ignas + Claude (this session)
 map: ../map-manual-flights.md
 blocked-by: [24, 25]
@@ -95,7 +95,39 @@ the precise drift the privacy ticket declared structurally impossible. It now
 renders `WE_STORE`/`WE_NEVER_STORE` from `packages/domain`. Verified in the
 browser.
 
-### Left to verify
+### Verified in the browser, on the real history
 
-The form, the picker's keyboard behaviour and the entry points need a
-signed-in session in the browser.
+- The picker opens on **your own airports before a keystroke** — VNO 57×,
+  BLL 11×, CPH 11×, FRA 10× — with no typing and no request.
+- Typing "london" puts **LTN (5×) and STN (4×) first**, then LGW and LHR
+  (large), then BQH and LCY (medium), with London Kentucky and London Ontario
+  last. Both promoted findings, working together, in situ.
+- `VNO LHR` pasted into the From field filled **both** ends.
+- `<input type="date">` rendered as `03/08/2014` in the browser's own locale.
+- Saving produced the flight — 1,746 km, `Europe/Vilnius`, `source=manual`,
+  confidence 1.00, correctly flagged needs-review with "No connecting or
+  return leg found — we didn't guess."
+- Provenance reads "You added this flight yourself", with no tier, version or
+  confidence, and "There is no source email — you told us about this flight
+  yourself."
+- Settings shows "Of those, added by you".
+- The test flight was removed afterwards and the history restored to
+  102 / 12 / 30 / 49.
+
+### Two bugs the browser found that the server tests could not
+
+1. **A route pasted into one field left the other looking empty.**
+   `AirportPicker` kept its display text in local state and never synced when
+   the value arrived from outside, so the form was complete but appeared
+   blank. It now syncs, showing the code (and the place, when it is one of
+   yours).
+2. **After a save the fields still read VNO / LHR while the button was
+   disabled** — `reset()` cleared the values the parent holds but not the text
+   the pickers show, which reads as filled but won't submit. The pickers are
+   now remounted on reset.
+
+### And a wording fix
+
+A typed flight's empty fields said **"not found in source"** — a claim about
+an email that never existed. On a manual flight they now read
+**"you didn't say"**.

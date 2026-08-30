@@ -18,6 +18,7 @@ export function AddFlight({ mine, count }: { mine: MyAirport[]; count: number })
   const [extra, setExtra] = useState({
     airline: "", flightNumber: "", depTime: "", arrTime: "", bookingRef: "",
   });
+  const [round, setRound] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState<string | null>(null);
@@ -27,6 +28,9 @@ export function AddFlight({ mine, count }: { mine: MyAirport[]; count: number })
   // flight from the same trip is the common next action.
   const reset = () => {
     setOrigin(null); setDest(null);
+    // Remount the pickers: nulling the value they report would leave the
+    // airport still written in the box, which reads as filled but won't submit.
+    setRound((r) => r + 1);
     setExtra({ airline: "", flightNumber: "", depTime: "", arrTime: "", bookingRef: "" });
   };
 
@@ -71,10 +75,11 @@ export function AddFlight({ mine, count }: { mine: MyAirport[]; count: number })
 
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end", marginTop: 12 }}>
         <AirportPicker
+          key={`from-${round}`}
           label="From" value={origin} onChange={setOrigin} mine={mine} autoFocus
           onPasteRoute={(a, b) => { setOrigin(a); setDest(b); }}
         />
-        <AirportPicker label="To" value={dest} onChange={setDest} mine={mine} />
+        <AirportPicker key={`to-${round}`} label="To" value={dest} onChange={setDest} mine={mine} />
         <div>
           <h6 style={{ color: "color-mix(in srgb, var(--color-text) 55%, transparent)", marginBottom: 6 }}>Date</h6>
           {/* The browser renders this in the reader's own locale, which is the

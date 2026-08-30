@@ -75,6 +75,15 @@ place it *is* distinguishable — its provenance — tells the truth.
   outrank Biggin Hill, and cache your own airports so the common case makes no
   request. Variants live on `prototype/airport-picker`.
 
+- [The add-a-flight form](tickets/026-add-a-flight-form.md): the settled
+  picker, the form, five entry points, and writes that go through the RPC and
+  a full rebuild in one transaction so a failed rebuild takes the write with
+  it. The rebuild's ~300 round trips became 5 (21,081ms → 1,823ms;
+  submit-to-visible 1,524ms) and OurAirports' size class was finally vendored.
+  Verified end to end on the real history and cleaned up after. Fixed a
+  consent-screen drift bug on the way: `connect/page.tsx` hardcoded the "we
+  store" list instead of importing it.
+
 ## Not yet specified
 
 - **Bulk entry.** Anyone with a hundred flights in another app wants to paste

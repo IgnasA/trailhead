@@ -48,6 +48,17 @@ export function AirportPicker({
 
   useEffect(() => { mineByCode.current = new Map(mine.map((m) => [m.iata, m])); }, [mine]);
 
+  // A value can arrive from outside this field — a route pasted into the other
+  // one fills this end too — and the input has to show it, or the form looks
+  // empty while being complete.
+  useEffect(() => {
+    if (!value) return;
+    if (text.trim().toUpperCase().startsWith(value)) return;
+    const known = mineByCode.current.get(value);
+    setText(known ? `${value} · ${place(known)}` : value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
   const q = text.trim();
 
   // Your own airports, matched in the browser: no request, no waiting.
