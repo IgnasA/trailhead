@@ -44,3 +44,8 @@ Build the form and put its door where the people who need it are standing.
   action should call it, so the flights the person entered come straight back
   instead of waiting for an import. From
   [What deletion means for data we never read](029-privacy-actions-for-typed-flights.md).
+- **The picker is settled**, and its five behaviours plus three promoted
+  findings are specified in
+  [Choosing an airport from nine thousand](025-airport-picker.md). Build it
+  fresh — the prototype variants on `prototype/airport-picker` are reference,
+  not code to promote.

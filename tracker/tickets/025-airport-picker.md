@@ -1,8 +1,8 @@
 ---
 title: Choosing an airport from nine thousand
 label: wayfinder:prototype
-status: open
-assignee:
+status: closed
+assignee: Ignas + Claude (this session)
 map: ../map-manual-flights.md
 blocked-by: []
 ---
@@ -74,3 +74,73 @@ Three things it exposed that a mockup would not have:
 Which variant, or which parts of which. Also: on a phone, is B's chip grid
 better than a keyboard-first combobox? And should C auto-select when a half
 has exactly one candidate, as "vilnius" does?
+
+## Resolution
+
+**A's structure, with B's insight as its default state and C's parsing as an
+accelerator.** Not three options — one field that behaves three ways depending
+on how much the person already knows.
+
+Why, in the order it decided itself:
+
+- **B had the best idea and the worst shape.** Its bet is real and the data
+  proves it: 49 airports cover 100% of this history, and VNO alone accounts
+  for 54 touches — a flight you are adding almost always departs somewhere you
+  have already flown. But as a *layout* it collapses for the person who needs
+  manual entry most: someone whose import found almost nothing gets an empty
+  grid and a lone "Search everywhere" button. The idea survives; the chip grid
+  does not.
+- **C is the fastest input in the product and the wrong default.** "VNO LHR"
+  beats everything for someone who thinks in codes, but a large empty box
+  captioned `VNO LHR` teaches nothing to someone who thinks in cities, and
+  route parsing is a category of surprise ("Vilnius to London Ontario"?). It is
+  a power-user accelerator wearing the costume of a primary interface.
+- **A is the only one that works from zero flights to a hundred**, and the only
+  one that is obviously right on a phone: one field at a time, native focus
+  behaviour, no two-dimensional target grid under a thumb.
+
+### What to build
+
+1. A combobox per airport, keyboard-first (arrows, Enter, Escape), matching on
+   code, city and airport name.
+2. **On focus, before a keystroke, the dropdown lists the person's own
+   airports, most-flown first.** That is B delivered inside A's affordance:
+   zero typing in the common case, and no dead surface for a new user — the
+   list simply starts empty and fills as they type.
+3. **A bare code typed blind and tabbed away is a complete answer** and never
+   opens the list.
+4. **A route pasted into the origin field splits across both fields** when it
+   parses as two codes. That is C as an accelerator discovered by accident: one
+   regex, no explaining.
+5. **Auto-select when a search returns exactly one candidate.** Confirming a
+   choice that has no alternatives is a click that buys nothing.
+
+### Three findings promoted to requirements
+
+1. **Personal history outranks match class, unconditionally.** Searching
+   "london" currently puts `LOZ` (London, Kentucky) and `YXU` (London,
+   Ontario) above `LTN`, flown five times, because their municipality starts
+   with the query and Luton's does not. That is not a ranking nuance; it is the
+   feature failing at its only job.
+2. **Re-vendor OurAirports' `type` column.**
+   `scripts/vendor-reference-data.mjs:57` reads it to skip closed airports and
+   then discards it, so nothing in the system can rank Heathrow above Biggin
+   Hill — `LHR` comes fifth for "london", alphabetically among ties. One line
+   plus a migration.
+3. **Cache the person's own airports client-side; do not ship the index.**
+   Own-airports-first means the common case makes *no request at all*, which
+   answers the latency finding (~400ms warm, 927ms cold per query) far better
+   than shipping ~150KB of gzipped index that only pays off for strangers'
+   airports.
+
+### Left deliberately unsettled
+
+Whether the dropdown-on-focus reads as a shortcut or as clutter at real
+density. It cannot be settled from the data, and the build should treat it as
+adjustable — if it reads as a wall, a compact chip row above the fields for the
+first few entries is the fallback.
+
+Primary source: branch `prototype/airport-picker` (`f721c34`). The variants and
+the switcher are not promoted — they were written under prototype constraints,
+and the winner is rewritten properly in
+[The add-a-flight form](026-add-a-flight-form.md).

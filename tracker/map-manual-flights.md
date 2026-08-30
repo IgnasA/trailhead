@@ -66,6 +66,15 @@ place it *is* distinguishable — its provenance — tells the truth.
   alone — reverting those to `imported` — which is the difference between
   removing what you typed and destroying what your mail proves.
 
+- [Choosing an airport from nine thousand](tickets/025-airport-picker.md):
+  a keyboard-first combobox whose dropdown opens on your *own* airports before
+  you type, takes a bare code typed blind, splits a pasted route across both
+  fields, and auto-selects a lone candidate. Three prototype findings became
+  requirements: personal history outranks match class (London, Kentucky beat
+  an airport flown five times), re-vendor OurAirports' `type` so Heathrow can
+  outrank Biggin Hill, and cache your own airports so the common case makes no
+  request. Variants live on `prototype/airport-picker`.
+
 ## Not yet specified
 
 - **Bulk entry.** Anyone with a hundred flights in another app wants to paste
