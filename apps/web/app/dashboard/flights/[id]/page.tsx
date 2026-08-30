@@ -114,6 +114,22 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
             <Row label="Seat" value={null} />
           </div>
 
+          {/* A flight someone typed has no tier, no version worth showing and
+              no confidence to report: we did not assess them, they were there.
+              Saying "1.00 confidence, llm tier" would be a small lie told in
+              precise-looking type. */}
+          {flight.source === "manual" ? (
+            <div style={{ marginTop: 22, background: "var(--color-neutral-200)", borderLeft: "2px solid var(--color-accent)", padding: "14px 16px" }}>
+              <h6 style={{ color: "var(--color-accent)", marginBottom: 9 }}>Provenance</h6>
+              <p style={{ fontSize: 12.5, margin: 0 }}>
+                You added this flight yourself.
+                {uniqueSources.length > 0 && (
+                  <> A later import found {uniqueSources.length} email{uniqueSources.length === 1 ? "" : "s"} that
+                  match it; where they disagreed with you, we kept your version.</>
+                )}
+              </p>
+            </div>
+          ) : (
           <div style={{ marginTop: 22, background: "var(--color-neutral-200)", borderLeft: "2px solid var(--color-accent)", padding: "14px 16px" }}>
             <h6 style={{ color: "var(--color-accent)", marginBottom: 11 }}>Provenance</h6>
             <div style={{ display: "flex", flexDirection: "column", gap: 7, font: "500 11px/1.3 ui-monospace, Menlo, monospace" }}>
@@ -133,6 +149,7 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
               </div>
             </div>
           </div>
+          )}
 
           <Corrections flightId={flight.id} origin={flight.origin_iata} dest={flight.dest_iata} />
         </section>
@@ -143,7 +160,9 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
           </h6>
           {uniqueSources.length === 0 ? (
             <p style={{ fontSize: 13 }} className="text-muted">
-              The source email metadata for this flight has been deleted. The flight itself survives — that is by design.
+              {flight.source === "manual"
+                ? "There is no source email — you told us about this flight yourself."
+                : "The source email metadata for this flight has been deleted. The flight itself survives — that is by design."}
             </p>
           ) : (
             <>

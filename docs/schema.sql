@@ -14,7 +14,10 @@ create table airports (
   iso_country   text not null,  -- ISO 3166-1 alpha-2 plus unofficial codes (XK)
   lat           double precision not null,
   lon           double precision not null,
-  tz            text not null   -- IANA zone, computed once at vendor time
+  tz            text not null,  -- IANA zone, computed once at vendor time
+  -- OurAirports' size class (large_airport … heliport). The only signal that
+  -- can rank Heathrow above Biggin Hill when someone types "London".
+  type          text
 );
 
 create table airlines (

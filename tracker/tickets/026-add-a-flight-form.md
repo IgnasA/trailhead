@@ -2,7 +2,7 @@
 title: The add-a-flight form
 label: wayfinder:task
 status: open
-assignee:
+assignee: Ignas + Claude (this session)
 map: ../map-manual-flights.md
 blocked-by: [24, 25]
 ---
@@ -49,3 +49,53 @@ Build the form and put its door where the people who need it are standing.
   [Choosing an airport from nine thousand](025-airport-picker.md). Build it
   fresh — the prototype variants on `prototype/airport-picker` are reference,
   not code to promote.
+
+## Progress
+
+Built and verified server-side; **the rendered form is not yet verified**,
+because the browser lost its session and signing in is Google OAuth.
+
+- `AirportPicker` — combobox per airport, arrows/Enter/Escape, dropdown opens
+  on the person's own airports before a keystroke (handed down by the page, so
+  the common case makes no request), a bare code typed blind and tabbed away
+  commits, a route pasted into the origin field fills both ends, and a lone
+  candidate auto-selects.
+- `AddFlight` — origin/destination/date required; airline, flight number,
+  times and booking reference behind a disclosure; `<input type="date">` so the
+  browser renders the reader's own format. Clears the airports but keeps the
+  date, because adding the return leg is the usual next action.
+- `POST/PATCH/DELETE /api/manual-flights` — definer RPC then a full rebuild in
+  **one transaction**, so a failed rebuild takes the write with it.
+- Entry points: the Flights page, the dashboard and trips empty states
+  ("Add a flight myself" beside "Import my mailbox"), and the plan step's Free
+  column.
+- Provenance for a typed flight reads "You added this flight yourself" — no
+  tier, no version, no confidence score. Where emails later corroborate it, it
+  says so, and that the person's version was kept.
+- `POST /api/rebuild`, called after "delete my history" so typed flights
+  reappear immediately rather than waiting for an import.
+
+### Measured
+
+- **Rebuild batched from ~300 round trips to 5**: 21,081ms → **1,823ms**, and
+  submit-to-visible is **1,524ms**. Identical output (102 / 12 / 30 / 49).
+- **Airport size class re-vendored** (migration 14; 1,169 large, 3,401 medium,
+  4,234 small, 153 seaplane, 100 heliport). Searching "london" now returns
+  LGW, LHR, STN (all large) first; Biggin Hill fell to 4th, London Kentucky
+  and London Ontario to 6th and 7th. Personal history is hoisted above all of
+  it in the browser, where the person's own airports already are.
+- The write rolls back with a failing rebuild; verified by forcing one.
+
+### A drift bug found on the way
+
+`apps/web/app/connect/page.tsx:41` **hardcoded** the "we store" list rather
+than importing it, so adding "Flights you add yourself" changed the privacy
+page and `docs/privacy.md` while the consent screen kept the old three lines —
+the precise drift the privacy ticket declared structurally impossible. It now
+renders `WE_STORE`/`WE_NEVER_STORE` from `packages/domain`. Verified in the
+browser.
+
+### Left to verify
+
+The form, the picker's keyboard behaviour and the entry points need a
+signed-in session in the browser.

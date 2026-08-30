@@ -51,6 +51,7 @@ export default async function Overview({
             : "Once an import finishes, your history appears here — flights, trips, countries and the map."
         }
         action={year ? { href: "/dashboard", label: "All years" } : { href: "/import", label: "Import my mailbox" }}
+        secondary={{ href: "/dashboard/flights", label: "Add a flight myself" }}
       />
     );
   }

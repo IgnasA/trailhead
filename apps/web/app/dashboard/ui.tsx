@@ -53,16 +53,29 @@ export function formatLocal(local: string | null, tz: string | null): string | n
 }
 
 /** Empty states say what to do next, not just that there's nothing here. */
-export function EmptyState({ title, body, action }: { title: string; body: string; action?: { href: string; label: string } }) {
+export function EmptyState({ title, body, action, secondary }: {
+  title: string; body: string;
+  action?: { href: string; label: string };
+  /** The second way out. An empty history usually means the import missed
+   *  things, so "add one yourself" belongs next to "import again". */
+  secondary?: { href: string; label: string };
+}) {
   return (
     <div style={{ padding: "48px 24px", maxWidth: "38em" }}>
       <h3 style={{ margin: 0 }}>{title}</h3>
       <p style={{ marginTop: 10 }} className="text-muted">{body}</p>
-      {action && (
-        <Link href={action.href} className="btn btn-primary" style={{ marginTop: 8, display: "inline-block" }}>
-          {action.label}
-        </Link>
-      )}
+      <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
+        {action && (
+          <Link href={action.href} className="btn btn-primary" style={{ display: "inline-block" }}>
+            {action.label}
+          </Link>
+        )}
+        {secondary && (
+          <Link href={secondary.href} className="btn btn-ghost" style={{ display: "inline-block" }}>
+            {secondary.label}
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

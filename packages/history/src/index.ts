@@ -8,6 +8,7 @@
 // running a Gmail scan first. It is shared because a manual flight has to
 // produce the same history without one, and reimplementing the invariant in
 // SQL would give it two definitions that will drift.
+import { randomUUID } from "node:crypto";
 import {
   EXTRACTION_VERSION,
   TRIP_CHAIN_MAX_GAP_DAYS,
@@ -153,6 +154,17 @@ export async function rebuildHistory(
   const legs: Leg[] = [];
   let flightCount = 0;
 
+  // Built in memory, then written in two statements. Doing it row by row cost
+  // ~300 round trips and about 21 seconds against a remote database — fine for
+  // a worker, far too slow to sit behind a form submit. Ids are generated here
+  // rather than returned so nothing depends on the order rows come back in.
+  const cols: Record<string, unknown[]> = {
+    id: [], status: [], airline: [], number: [], origin: [], dest: [], date: [],
+    depLocal: [], depTz: [], arrLocal: [], arrTz: [], distance: [], ref: [],
+    price: [], currency: [], confidence: [], source: [],
+  };
+  const sourceLinks: { flight: string; extraction: string }[] = [];
+
   for (const { ids, tiers, ex, manual } of groups.values()) {
     const origin = airports.get(ex.originIata!);
     const dest = airports.get(ex.destIata!);
@@ -168,32 +180,54 @@ export async function rebuildHistory(
       : computeConfidence(bestTier, ex, {
           originKnown: true, destKnown: true, corroboratingEmails: ids.length - 1,
         });
-    const depLocal = ex.depLocalTime ? `${ex.departureDate} ${ex.depLocalTime}` : null;
-    const arrLocal = ex.arrLocalTime ? `${ex.departureDate} ${ex.arrLocalTime}` : null;
-    const distanceKm = haversineKm(origin.lat, origin.lon, dest.lat, dest.lon);
-    const { rows: [f] } = await pool.query(
-      `insert into flights (user_id, status, airline_iata, flight_number, origin_iata, dest_iata,
-         departure_date, dep_local, dep_tz, arr_local, arr_tz, distance_km, booking_ref,
-         price_amount, price_currency, confidence, extraction_version, source)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) returning id`,
-      [
-        userId,
-        ex.departureDate! <= today ? "flown" : "upcoming",
-        ex.airlineIata, normalizeFlightNumber(ex.flightNumber, ex.airlineIata),
-        ex.originIata, ex.destIata,
-        ex.departureDate, depLocal, origin.tz, arrLocal, dest.tz, distanceKm,
-        ex.bookingRef, ex.priceAmount, ex.priceCurrency, confidence, EXTRACTION_VERSION,
-        manual ? "manual" : "imported",
-      ],
-    );
-    for (const exId of ids) {
-      await pool.query(
-        `insert into flight_sources (flight_id, extraction_id) values ($1,$2) on conflict do nothing`,
-        [f.id, exId],
-      );
-    }
+    const id = randomUUID();
+    cols.id!.push(id);
+    cols.status!.push(ex.departureDate! <= today ? "flown" : "upcoming");
+    cols.airline!.push(ex.airlineIata);
+    cols.number!.push(normalizeFlightNumber(ex.flightNumber, ex.airlineIata));
+    cols.origin!.push(ex.originIata);
+    cols.dest!.push(ex.destIata);
+    cols.date!.push(ex.departureDate);
+    cols.depLocal!.push(ex.depLocalTime ? `${ex.departureDate} ${ex.depLocalTime}` : null);
+    cols.depTz!.push(origin.tz);
+    cols.arrLocal!.push(ex.arrLocalTime ? `${ex.departureDate} ${ex.arrLocalTime}` : null);
+    cols.arrTz!.push(dest.tz);
+    cols.distance!.push(haversineKm(origin.lat, origin.lon, dest.lat, dest.lon));
+    cols.ref!.push(ex.bookingRef);
+    cols.price!.push(ex.priceAmount);
+    cols.currency!.push(ex.priceCurrency);
+    cols.confidence!.push(confidence);
+    cols.source!.push(manual ? "manual" : "imported");
+    for (const exId of ids) sourceLinks.push({ flight: id, extraction: exId });
     flightCount += 1;
-    legs.push({ id: f.id, date: ex.departureDate!, origin: ex.originIata!, dest: ex.destIata! });
+    legs.push({ id, date: ex.departureDate!, origin: ex.originIata!, dest: ex.destIata! });
+  }
+
+  if (flightCount) {
+    await pool.query(
+      `insert into flights (id, user_id, status, airline_iata, flight_number, origin_iata,
+         dest_iata, departure_date, dep_local, dep_tz, arr_local, arr_tz, distance_km,
+         booking_ref, price_amount, price_currency, confidence, extraction_version, source)
+       select id, $1::uuid, status, airline, number, origin, dest, date, dep_local, dep_tz,
+              arr_local, arr_tz, distance, ref, price, currency, confidence, $2::integer, source
+       from unnest($3::uuid[], $4::text[], $5::text[], $6::text[], $7::text[], $8::text[],
+                   $9::date[], $10::timestamp[], $11::text[], $12::timestamp[], $13::text[],
+                   $14::integer[], $15::text[], $16::numeric[], $17::text[], $18::numeric[],
+                   $19::text[])
+         as t(id, status, airline, number, origin, dest, date, dep_local, dep_tz,
+              arr_local, arr_tz, distance, ref, price, currency, confidence, source)`,
+      [userId, EXTRACTION_VERSION, cols.id, cols.status, cols.airline, cols.number,
+       cols.origin, cols.dest, cols.date, cols.depLocal, cols.depTz, cols.arrLocal,
+       cols.arrTz, cols.distance, cols.ref, cols.price, cols.currency, cols.confidence,
+       cols.source],
+    );
+  }
+  if (sourceLinks.length) {
+    await pool.query(
+      `insert into flight_sources (flight_id, extraction_id)
+       select * from unnest($1::uuid[], $2::uuid[]) on conflict do nothing`,
+      [sourceLinks.map((s) => s.flight), sourceLinks.map((s) => s.extraction)],
+    );
   }
 
   await deriveUtc(pool, userId);
@@ -272,7 +306,11 @@ async function reconstructTrips(pool: Queryable, userId: string, legs: Leg[]): P
   const dayDiff = (a: string, b: string) =>
     Math.abs(new Date(a).getTime() - new Date(b).getTime()) / 86_400_000;
 
-  let tripCount = 0;
+  // Collected in memory, written in three statements at the end.
+  const trips: { id: string; title: string; start: string; end: string }[] = [];
+  const assignments: { flight: string; trip: string }[] = [];
+  const reviews: { flight: string; reason: string }[] = [];
+
   for (const [, yearFlights] of byYear) {
     // Home is where you leave from most often that year — it moves, so it is
     // recomputed per year rather than set once.
@@ -281,25 +319,23 @@ async function reconstructTrips(pool: Queryable, userId: string, legs: Leg[]): P
     const home = [...originCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
 
     let chain: Leg[] = [];
-    const flush = async () => {
+    const flush = () => {
       if (chain.length === 0) return;
       const closes = chain[chain.length - 1]!.dest === home;
       if (chain[0]!.origin === home && closes && chain.length >= 2) {
-        const title = [chain[0]!.origin, ...chain.map((c) => c.dest)].join(" → ");
-        const { rows: [t] } = await pool.query(
-          `insert into trips (user_id, title, start_date, end_date) values ($1,$2,$3,$4) returning id`,
-          [userId, title, chain[0]!.date, chain[chain.length - 1]!.date],
-        );
-        for (const c of chain) await pool.query(`update flights set trip_id=$2 where id=$1`, [c.id, t.id]);
-        tripCount += 1;
+        const id = randomUUID();
+        trips.push({
+          id,
+          title: [chain[0]!.origin, ...chain.map((c) => c.dest)].join(" \u2192 "),
+          start: chain[0]!.date,
+          end: chain[chain.length - 1]!.date,
+        });
+        for (const c of chain) assignments.push({ flight: c.id, trip: id });
       } else {
-        for (const c of chain)
-          await pool.query(
-            `update flights set needs_review=true, review_reason=$2 where id=$1`,
-            [c.id, chain.length === 1
-              ? "No connecting or return leg found — we didn't guess."
-              : "Chain doesn't start and end at your home airport — we didn't guess."],
-          );
+        const reason = chain.length === 1
+          ? "No connecting or return leg found — we didn't guess."
+          : "Chain doesn't start and end at your home airport — we didn't guess.";
+        for (const c of chain) reviews.push({ flight: c.id, reason });
       }
       chain = [];
     };
@@ -307,12 +343,35 @@ async function reconstructTrips(pool: Queryable, userId: string, legs: Leg[]): P
     for (const f of yearFlights) {
       const prev = chain[chain.length - 1];
       if (prev && (prev.dest !== f.origin || dayDiff(prev.date, f.date) > TRIP_CHAIN_MAX_GAP_DAYS)) {
-        await flush();
+        flush();
       }
       chain.push(f);
-      if (f.dest === home && chain.length >= 2) await flush();
+      if (f.dest === home && chain.length >= 2) flush();
     }
-    await flush();
+    flush();
   }
-  return tripCount;
+
+  if (trips.length) {
+    await pool.query(
+      `insert into trips (id, user_id, title, start_date, end_date)
+       select id, $1::uuid, title, start_date, end_date
+       from unnest($2::uuid[], $3::text[], $4::date[], $5::date[])
+         as t(id, title, start_date, end_date)`,
+      [userId, trips.map((t) => t.id), trips.map((t) => t.title),
+       trips.map((t) => t.start), trips.map((t) => t.end)],
+    );
+    await pool.query(
+      `update flights f set trip_id = m.trip
+       from unnest($1::uuid[], $2::uuid[]) as m(flight, trip) where f.id = m.flight`,
+      [assignments.map((a) => a.flight), assignments.map((a) => a.trip)],
+    );
+  }
+  if (reviews.length) {
+    await pool.query(
+      `update flights f set needs_review = true, review_reason = m.reason
+       from unnest($1::uuid[], $2::text[]) as m(flight, reason) where f.id = m.flight`,
+      [reviews.map((r) => r.flight), reviews.map((r) => r.reason)],
+    );
+  }
+  return trips.length;
 }
