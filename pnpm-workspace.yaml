@@ -3,3 +3,6 @@ packages:
   - packages/*
 allowBuilds:
   esbuild: true
+overrides:
+  # next pins postcss 8.4.31 exactly, which has open advisories
+  postcss: ^8.5.23
