@@ -14,12 +14,12 @@
     "@trailhead/domain": "workspace:*",
     "@trailhead/gmail": "workspace:*",
     "@trailhead/history": "workspace:*",
-    "pg": "^8.13.0",
-    "tsx": "^4.19.0"
+    "pg": "^8.23.1",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/pg": "^8.11.0",
-    "typescript": "^5.7.0"
+    "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
+    "typescript": "^5.9.3"
   }
 }

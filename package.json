@@ -13,7 +13,7 @@
     "docs:privacy": "node --experimental-strip-types scripts/generate-privacy-doc.mjs"
   },
   "devDependencies": {
-    "@photostructure/tz-lookup": "^11.6.1",
-    "pg": "^8.23.0"
+    "@photostructure/tz-lookup": "^11.7.0",
+    "pg": "^8.23.1"
   }
 }
