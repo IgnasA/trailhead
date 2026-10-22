@@ -7,6 +7,7 @@ import pg from "pg";
 import { fetchEmail, refreshAccessToken } from "@trailhead/gmail";
 import { bodyForExtraction } from "@trailhead/domain";
 import { supabaseServer } from "../../../../lib/supabase/server";
+import { isUuid } from "../../../../lib/http/manualFlight";
 
 let pool: pg.Pool | undefined;
 function db() {
@@ -20,6 +21,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  if (!isUuid(id)) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
