@@ -18,6 +18,16 @@ import {
   normalizeFlightNumber,
   type FlightExtraction,
 } from "@trailhead/domain";
+import {
+  identityOf,
+  replayCorrections,
+  type FlightIdentity,
+  type Group,
+  type ReplayResult,
+  type StoredCorrection,
+} from "./corrections.js";
+
+export * from "./corrections.js";
 
 /** Anything that can run SQL: a Pool, or a single client — which lets a
  *  caller run the rebuild inside a transaction it controls. */
@@ -40,6 +50,9 @@ export interface RebuildResult {
   countries: number;
   /** Distinct airports touched by flown flights. */
   airports: number;
+  /** Corrections replayed onto this rebuild, and those whose flight wasn't
+   *  among the inputs this time. */
+  corrections: ReplayResult;
 }
 
 interface Leg {
@@ -47,15 +60,6 @@ interface Leg {
   date: string;
   origin: string;
   dest: string;
-}
-
-/** One merged segment on its way to becoming a Flight. `manual` is set when a
- *  typed flight contributed, whether or not emails did too. */
-interface Group {
-  ids: string[];
-  tiers: string[];
-  ex: FlightExtraction;
-  manual: boolean;
 }
 
 /** A manual flight, shaped as an extraction so it merges through exactly the
@@ -146,6 +150,15 @@ export async function rebuildHistory(
     }
   }
 
+  // Corrections replay last, over emails and typed flights alike: they are the
+  // person's word on what the merged result should be.
+  await stampLegacyTargets(pool, userId);
+  const { rows: correctionRows } = await pool.query(
+    `select id, kind, payload from corrections where user_id=$1 order by created_at, id`,
+    [userId],
+  );
+  const replay = replayCorrections(groups, correctionRows as StoredCorrection[]);
+
   const { rows: airportRows } = await pool.query(`select iata, lat, lon, tz from airports`);
   const airports = new Map(airportRows.map((a) => [a.iata as string, a]));
 
@@ -165,7 +178,7 @@ export async function rebuildHistory(
   };
   const sourceLinks: { flight: string; extraction: string }[] = [];
 
-  for (const { ids, tiers, ex, manual } of groups.values()) {
+  for (const { ids, tiers, ex, manual, notAFlight } of groups.values()) {
     const origin = airports.get(ex.originIata!);
     const dest = airports.get(ex.destIata!);
     if (!origin || !dest) continue;
@@ -182,7 +195,7 @@ export async function rebuildHistory(
         });
     const id = randomUUID();
     cols.id!.push(id);
-    cols.status!.push(ex.departureDate! <= today ? "flown" : "upcoming");
+    cols.status!.push(notAFlight ? "not_a_flight" : ex.departureDate! <= today ? "flown" : "upcoming");
     cols.airline!.push(ex.airlineIata);
     cols.number!.push(normalizeFlightNumber(ex.flightNumber, ex.airlineIata));
     cols.origin!.push(ex.originIata);
@@ -200,7 +213,9 @@ export async function rebuildHistory(
     cols.source!.push(manual ? "manual" : "imported");
     for (const exId of ids) sourceLinks.push({ flight: id, extraction: exId });
     flightCount += 1;
-    legs.push({ id, date: ex.departureDate!, origin: ex.originIata!, dest: ex.destIata! });
+    // Something that never flew can't be a leg of a trip, and would only make
+    // the chaining around it look broken.
+    if (!notAFlight) legs.push({ id, date: ex.departureDate!, origin: ex.originIata!, dest: ex.destIata! });
   }
 
   if (flightCount) {
@@ -255,7 +270,49 @@ export async function rebuildHistory(
     trips,
     countries: stats.countries as number,
     airports: stats.airports as number,
+    corrections: replay,
   };
+}
+
+/**
+ * Corrections recorded before replay existed carry only a flight id, and the
+ * rebuild is about to delete that flight — `on delete set null` would leave
+ * the correction pointing at nothing, forever. While the id still resolves,
+ * record which flight it meant, once, in the same terms new corrections use.
+ *
+ * A field fix has usually already been applied to the row, so the row shows
+ * the corrected route; the identity it was made against is the one its
+ * emails gave, which is what the merge will produce again. "Not a flight"
+ * changes nothing that identifies the row, so the row itself is used — which
+ * also covers a typed flight with no emails behind it.
+ */
+async function stampLegacyTargets(pool: Queryable, userId: string): Promise<void> {
+  const { rows } = await pool.query(
+    `select c.id, c.kind, to_jsonb(f) as flight,
+            (select e.payload from flight_sources fs
+               join email_extractions e on e.id = fs.extraction_id
+              where fs.flight_id = c.flight_id
+              order by e.id limit 1) as source
+     from corrections c join flights f on f.id = c.flight_id
+     where c.user_id=$1 and not (c.payload ? 'target')`,
+    [userId],
+  );
+  const ids: string[] = [];
+  const targets: string[] = [];
+  for (const row of rows) {
+    const from = row.kind === "correct_field" && row.source ? row.source : row.flight;
+    const target: FlightIdentity | null = identityOf(from as Record<string, unknown>);
+    if (!target) continue;
+    ids.push(row.id);
+    targets.push(JSON.stringify(target));
+  }
+  if (ids.length) {
+    await pool.query(
+      `update corrections c set payload = c.payload || jsonb_build_object('target', t.target)
+       from unnest($1::uuid[], $2::jsonb[]) as t(id, target) where c.id = t.id`,
+      [ids, targets],
+    );
+  }
 }
 
 /**

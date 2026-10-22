@@ -3,15 +3,21 @@
 // "Correct this flight" and "Not a flight" (frame 1h). Every one is stored as
 // an immutable correction — which is also the labelled eval dataset the
 // extraction pipeline is measured against (pipeline ticket).
+//
+// Each one carries the flight it is about as the merge identity, not just the
+// id: the id is gone after the next rebuild, and the identity is what lets
+// the rebuild find the same flight again and replay the correction over it.
 import { useState } from "react";
+import type { FlightIdentity } from "@trailhead/history";
 import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "../../../../lib/supabase/client";
 
 export function Corrections({
-  flightId, origin, dest,
+  flightId, target,
 }: {
-  flightId: string; origin: string; dest: string;
+  flightId: string; target: FlightIdentity;
 }) {
+  const { origin_iata: origin, dest_iata: dest } = target;
   const [mode, setMode] = useState<"idle" | "fields" | "busy" | "done">("idle");
   const [newOrigin, setNewOrigin] = useState(origin);
   const [newDest, setNewDest] = useState(dest);
@@ -25,7 +31,7 @@ export function Corrections({
     const { error } = await supabase.rpc("record_correction", {
       p_kind: kind,
       p_flight_id: flightId,
-      p_payload: payload,
+      p_payload: { ...payload, target },
     });
     if (error) {
       setError("Couldn't save that correction.");
@@ -76,7 +82,8 @@ export function Corrections({
             <button className="btn btn-ghost" onClick={() => setMode("idle")}>Cancel</button>
           </div>
           <p style={{ margin: "10px 0 0", fontSize: 11 }} className="text-muted">
-            Distances and trips are rebuilt from the corrected airports on the next import.
+            Distances and trips are rebuilt from the corrected airports on the next import —
+            and every import after it keeps your correction.
           </p>
         </div>
       ) : (

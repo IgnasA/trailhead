@@ -30,9 +30,8 @@ OAuth consent screen is in testing mode, which caps it at 100 named users.
 | M5 | The three-stop reveal, save as image | Done |
 | M6 | Settings, the deletion actions, corrections | Done |
 
-Known gaps are recorded honestly in the tickets rather than hidden: user
-corrections are stored but not yet replayed over a re-import, the golden-corpus
-eval harness is specified but unbuilt, and three extraction-quality bugs
+Known gaps are recorded honestly in the tickets rather than hidden: the
+golden-corpus eval harness is specified but unbuilt, and three extraction-quality bugs
 (a wrong-but-real airport code, codeshare duplicates, cancellations merging
 into flown flights) are captured as eval cases in
 [tracker/tickets/018](tracker/tickets/018-m3-dashboard.md).
@@ -45,6 +44,7 @@ Gmail search  →  skip already-read (content hash)
               →  pre-filter: flight number or route?      (deterministic)
               →  Claude Haiku, one Message Batch          (only what's left)
               →  merge on (airline, flight no, date, route)
+              →  replay your corrections, oldest first
               →  trips: per-year home airport, 21-day chaining
 ```
 
@@ -52,6 +52,10 @@ Every flight keeps its provenance — which emails it came from, which
 extraction version, what confidence — and absent fields read "not found in
 source" rather than being guessed. Trip reconstruction declines to guess too:
 a flight it can't confidently place is surfaced for review with the reason.
+
+Corrections — "that was Vilnius, not Dakhla", "not a flight" — are inputs
+to the rebuild, not edits to its output: each one names the flight by its
+merge identity and is applied again on every import, so a fix is made once.
 
 Aggregations are plain SQL. No LLM is involved in counting anything.
 
@@ -96,9 +100,12 @@ step by step. Environment variables live in `.env.local` (git-ignored):
 
 ```bash
 pnpm typecheck     # tsc --noEmit in every package
-pnpm test          # vitest in packages/domain (other packages have no tests yet)
+pnpm test          # vitest in packages/domain and packages/history (the apps have no tests yet)
 pnpm --filter @trailhead/web build
 ```
+
+`packages/history` runs `rebuildHistory` against the repo's own migrations in
+an in-process Postgres (PGlite) — no database needed.
 
 CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm test` on every
 pull request. There is no linter configured yet.

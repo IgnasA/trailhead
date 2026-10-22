@@ -127,6 +127,11 @@ made and the build itself is either done or handed off as an unambiguous plan.
   privacy copy lives once and generates the doc; settings states what is held
   and offers the four separate actions with typed confirmation; corrections
   record immutable labelled examples and apply their effect; empty states.
+- [Replay corrections over a rebuild](tickets/030-replay-corrections.md):
+  corrections carry the flight's merge identity and apply to the merged
+  groups, oldest first, on every rebuild; a fix re-keys (and can merge) its
+  flight, "not a flight" is written with that status and counted nowhere,
+  legacy id-only corrections are stamped while their id still resolves.
 - [Gmail access and OAuth verification constraints](tickets/004-gmail-access-and-verification.md):
   use `gmail.readonly` alone; dogfood indefinitely in Testing mode (100 test
   users, 7-day token expiry) but never soft-launch unverified (lifetime
