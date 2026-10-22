@@ -10,24 +10,9 @@ import pg from "pg";
 import { rebuildHistory } from "@trailhead/history";
 import { supabaseServer } from "../../../lib/supabase/server";
 import { isSameOrigin } from "../../../lib/http/sameOrigin";
+import { isUuid, parseManualFlight, readJson, type ManualFlightInput } from "../../../lib/http/manualFlight";
 
 let pool: pg.Pool | undefined;
-
-interface Body {
-  id?: string;
-  origin?: string;
-  dest?: string;
-  date?: string;
-  airline?: string | null;
-  flightNumber?: string | null;
-  depTime?: string | null;
-  arrTime?: string | null;
-  bookingRef?: string | null;
-  price?: number | null;
-  currency?: string | null;
-}
-
-const IATA = /^[A-Z]{3}$/;
 
 async function withRebuild(
   userId: string,
@@ -55,26 +40,27 @@ async function withRebuild(
 
 const fail = (message: string, status = 400) => NextResponse.json({ error: message }, { status });
 
+/** The RPCs' parameters after the id, in order. */
+const fields = (f: ManualFlightInput) => [
+  f.origin, f.dest, f.date, f.airline, f.flightNumber,
+  f.depTime, f.arrTime, f.bookingRef, f.price, f.currency,
+];
+
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return fail("forbidden", 403);
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return fail("not_authenticated", 401);
 
-  const b = (await request.json()) as Body;
-  const origin = b.origin?.toUpperCase() ?? "";
-  const dest = b.dest?.toUpperCase() ?? "";
-  if (!IATA.test(origin) || !IATA.test(dest)) return fail("Pick a departure and an arrival airport.");
-  if (origin === dest) return fail("A flight has to go somewhere else.");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(b.date ?? "")) return fail("Pick a date.");
+  const parsed = parseManualFlight(await readJson(request));
+  if (!parsed.ok) return fail(parsed.error);
+  const f = parsed.value;
 
   try {
     const built = await withRebuild(user.id, async (c) => {
       await c.query(
         `select public.add_manual_flight($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-        [origin, dest, b.date, b.airline || null, b.flightNumber || null,
-         b.depTime || null, b.arrTime || null, b.bookingRef || null,
-         b.price ?? null, b.currency || null],
+        fields(f),
       );
     });
     return NextResponse.json({ ok: true, ...built });
@@ -95,20 +81,17 @@ export async function PATCH(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return fail("not_authenticated", 401);
 
-  const b = (await request.json()) as Body;
-  const origin = b.origin?.toUpperCase() ?? "";
-  const dest = b.dest?.toUpperCase() ?? "";
-  if (!b.id) return fail("Which flight?");
-  if (!IATA.test(origin) || !IATA.test(dest)) return fail("Pick a departure and an arrival airport.");
-  if (origin === dest) return fail("A flight has to go somewhere else.");
+  const body = await readJson(request);
+  const id = (body as { id?: unknown } | undefined)?.id;
+  if (!isUuid(id)) return fail("Which flight?");
+  const parsed = parseManualFlight(body);
+  if (!parsed.ok) return fail(parsed.error);
 
   try {
     const built = await withRebuild(user.id, async (c) => {
       await c.query(
         `select public.update_manual_flight($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-        [b.id, origin, dest, b.date, b.airline || null, b.flightNumber || null,
-         b.depTime || null, b.arrTime || null, b.bookingRef || null,
-         b.price ?? null, b.currency || null],
+        [id, ...fields(parsed.value)],
       );
     });
     return NextResponse.json({ ok: true, ...built });
@@ -124,8 +107,8 @@ export async function DELETE(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return fail("not_authenticated", 401);
 
-  const { id } = (await request.json()) as { id?: string };
-  if (!id) return fail("Which flight?");
+  const id = ((await readJson(request)) as { id?: unknown } | undefined)?.id;
+  if (!isUuid(id)) return fail("Which flight?");
 
   try {
     // Deleting goes through the rebuild too: dropping the row is not enough,
