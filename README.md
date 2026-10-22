@@ -94,6 +94,28 @@ step by step. Environment variables live in `.env.local` (git-ignored):
 `ANTHROPIC_API_KEY`, and for the web app `NEXT_PUBLIC_SUPABASE_URL` and
 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
+## Testing and checks
+
+```bash
+pnpm typecheck     # tsc --noEmit in every package
+pnpm test          # vitest in packages/domain (other packages have no tests yet)
+pnpm --filter @trailhead/web build
+```
+
+CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm test` on every
+pull request. There is no linter configured yet.
+
+## Deploying
+
+- **Worker** — `.github/workflows/deploy-worker.yml` deploys `apps/worker` to
+  Fly (app `trailhead-worker`) on pushes to `main` that touch the worker or
+  `packages/domain`. It needs the `FLY_API_TOKEN` repository secret.
+- **Web app** — `pnpm --filter @trailhead/web build`, then `start`; hosting is
+  discussed in [tracker/tickets/003](tracker/tickets/003-stack-and-hosting.md).
+
+Optional variables, by name: `APP_URL`, `RESEND_API_KEY`, `RESEND_FROM`,
+`LLM_BATCH_MIN`, `LLM_BATCH_MAX_WAIT_MS`, `LLM_CALL_CAP`.
+
 ## Cost
 
 A first import of a 740-email mailbox measured **$1.54** in tokens before
