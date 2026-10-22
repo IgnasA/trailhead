@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+# Nothing here writes to the repository; keep the job token read-only.
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
