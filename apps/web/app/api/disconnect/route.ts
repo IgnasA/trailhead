@@ -3,10 +3,12 @@
 import { NextResponse } from "next/server";
 import pg from "pg";
 import { supabaseServer } from "../../../lib/supabase/server";
+import { isSameOrigin } from "../../../lib/http/sameOrigin";
 
 let pool: pg.Pool | undefined;
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });

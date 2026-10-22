@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import pg from "pg";
 import { rebuildHistory } from "@trailhead/history";
 import { supabaseServer } from "../../../lib/supabase/server";
+import { isSameOrigin } from "../../../lib/http/sameOrigin";
 
 let pool: pg.Pool | undefined;
 
@@ -55,6 +56,7 @@ async function withRebuild(
 const fail = (message: string, status = 400) => NextResponse.json({ error: message }, { status });
 
 export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return fail("forbidden", 403);
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return fail("not_authenticated", 401);
@@ -88,6 +90,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  if (!isSameOrigin(request)) return fail("forbidden", 403);
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return fail("not_authenticated", 401);
@@ -116,6 +119,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!isSameOrigin(request)) return fail("forbidden", 403);
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return fail("not_authenticated", 401);
