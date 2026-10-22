@@ -34,6 +34,10 @@ export async function POST(request: Request) {
   }
 
   const { error } = await supabase.rpc("disconnect_gmail");
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    // The message is Postgres's, not ours: log it, don't hand it to the browser.
+    console.error("disconnect_gmail failed:", error.message);
+    return NextResponse.json({ error: "disconnect_failed" }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }
