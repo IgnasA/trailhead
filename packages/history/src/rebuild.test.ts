@@ -1,7 +1,7 @@
 // rebuildHistory end to end, against the repo's own migrations in an
 // in-process Postgres (PGlite). No network, no real database: the Supabase
-// pieces the migrations lean on — the auth schema, its roles, the realtime
-// publication — are stubbed just far enough for them to apply.
+// pieces the migrations lean on come from the same stub the SQL migration
+// tests use (supabase/tests/supabase_stub.sql).
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
@@ -9,18 +9,13 @@ import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { FlightExtraction } from "@trailhead/domain";
 import { rebuildHistory, type Queryable } from "./index.js";
 
-const MIGRATIONS = fileURLToPath(new URL("../../../supabase/migrations/", import.meta.url));
+const SUPABASE = fileURLToPath(new URL("../../../supabase/", import.meta.url));
+const MIGRATIONS = `${SUPABASE}migrations/`;
 const USER = "00000000-0000-4000-8000-000000000001";
 
 async function freshDatabase(): Promise<PGlite> {
   const db = new PGlite();
-  await db.exec(`
-    create schema auth;
-    create table auth.users (id uuid primary key);
-    create function auth.uid() returns uuid language sql as 'select null::uuid';
-    create role authenticated; create role anon; create role service_role;
-    create publication supabase_realtime;
-  `);
+  await db.exec(readFileSync(`${SUPABASE}tests/supabase_stub.sql`, "utf8"));
   for (const file of readdirSync(MIGRATIONS).filter((f) => f.endsWith(".sql")).sort()) {
     await db.exec(readFileSync(MIGRATIONS + file, "utf8"));
   }
@@ -208,6 +203,23 @@ describe("rebuildHistory replays corrections", { timeout: 30_000 }, () => {
 
     // And a second rebuild still applies them, now by target alone.
     expect((await rebuild()).corrections).toEqual({ applied: 2, unmatched: 0 });
+  });
+
+  it("never stamps a correction with another person's flight", async () => {
+    const OTHER = "00000000-0000-4000-8000-000000000002";
+    await db.query(`insert into auth.users (id) values ($1) on conflict do nothing`, [OTHER]);
+    const { rows: [theirs] } = await db.query<{ id: string }>(
+      `insert into flights (user_id, origin_iata, dest_iata, departure_date, confidence, extraction_version)
+       values ($1, 'LHR', 'FRA', '2024-05-05', 0.9, 1) returning id`, [OTHER]);
+    await db.query(`insert into corrections (user_id, kind, flight_id, payload) values ($1, 'not_a_flight', $2, '{}')`,
+      [USER, theirs!.id]);
+
+    expect((await rebuild()).corrections).toEqual({ applied: 0, unmatched: 1 });
+    const { rows: [mine] } = await db.query<{ payload: Record<string, unknown> }>(
+      `select payload from corrections where user_id=$1`, [USER]);
+    expect(mine!.payload).toEqual({});
+    const { rows: [still] } = await db.query<{ status: string }>(`select status from flights where id=$1`, [theirs!.id]);
+    expect(still!.status).toBe("flown");
   });
 
   it("holds a correction whose flight has gone, and applies it when it comes back", async () => {

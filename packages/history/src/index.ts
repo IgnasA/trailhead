@@ -285,6 +285,10 @@ export async function rebuildHistory(
  * emails gave, which is what the merge will produce again. "Not a flight"
  * changes nothing that identifies the row, so the row itself is used — which
  * also covers a typed flight with no emails behind it.
+ *
+ * Only the person's own flight is read: whether record_correction checks that
+ * a flight id is theirs can't be seen from this repo (docs/SECURITY_REVIEW.md
+ * H1), and this must not copy someone else's flight into their correction.
  */
 async function stampLegacyTargets(pool: Queryable, userId: string): Promise<void> {
   const { rows } = await pool.query(
@@ -293,7 +297,7 @@ async function stampLegacyTargets(pool: Queryable, userId: string): Promise<void
                join email_extractions e on e.id = fs.extraction_id
               where fs.flight_id = c.flight_id
               order by e.id limit 1) as source
-     from corrections c join flights f on f.id = c.flight_id
+     from corrections c join flights f on f.id = c.flight_id and f.user_id = c.user_id
      where c.user_id=$1 and not (c.payload ? 'target')`,
     [userId],
   );
