@@ -129,6 +129,11 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
                 {flight.airline_iata} {flight.flight_number ?? ""}
               </span>
             )}
+            {flight.status === "not_a_flight" && (
+              <span style={{ padding: "4px 8px", border: "1px solid var(--color-text)", font: "700 9.5px/1 var(--font-body)", letterSpacing: ".08em", textTransform: "uppercase" }}>
+                Marked not a flight
+              </span>
+            )}
             {flight.needs_review && (
               <span style={{ padding: "4px 8px", border: "1px solid var(--color-accent)", color: "var(--color-accent)", font: "700 9.5px/1 var(--font-body)", letterSpacing: ".08em", textTransform: "uppercase" }}>
                 Needs review
@@ -207,7 +212,16 @@ export default async function FlightDetail({ params }: { params: Promise<{ id: s
               A typed flight has no extraction to label — its edits are direct
               (above), and putting them in the eval dataset would poison it. */}
           {flight.source !== "manual" && (
-          <Corrections flightId={flight.id} origin={flight.origin_iata} dest={flight.dest_iata} />
+          <Corrections
+            flightId={flight.id}
+            target={{
+              airline_iata: flight.airline_iata,
+              flight_number: flight.flight_number,
+              departure_date: flight.departure_date,
+              origin_iata: flight.origin_iata,
+              dest_iata: flight.dest_iata,
+            }}
+          />
           )}
         </section>
 

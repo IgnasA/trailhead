@@ -14,6 +14,8 @@ export default async function Flights({
   let query = supabase
     .from("flights")
     .select("id, origin_iata, dest_iata, departure_date, airline_iata, flight_number, distance_km, confidence, needs_review")
+    // Marked "not a flight": kept as a labelled example, listed nowhere.
+    .neq("status", "not_a_flight")
     .order("departure_date", { ascending: false });
   if (year) query = query.gte("departure_date", `${year}-01-01`).lte("departure_date", `${year}-12-31`);
   const { data: flights } = await query;

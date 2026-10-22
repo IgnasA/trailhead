@@ -91,6 +91,8 @@ export default async function Trips({
     supabase
       .from("flights")
       .select("id, origin_iata, dest_iata, departure_date, distance_km, trip_id, needs_review, review_reason")
+      // Marked "not a flight": kept as a labelled example, counted nowhere.
+      .neq("status", "not_a_flight")
       .order("departure_date", { ascending: true }),
   ]);
 
