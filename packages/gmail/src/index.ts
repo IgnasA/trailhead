@@ -90,7 +90,7 @@ export async function listAllMessageIds(
       nextPageToken?: string;
     }>(
       accessToken,
-      `/messages?maxResults=500&q=${encodeURIComponent(query)}${pageToken ? `&pageToken=${pageToken}` : ""}`,
+      `/messages?maxResults=500&q=${encodeURIComponent(query)}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
     );
     ids.push(...(page.messages ?? []).map((m) => m.id));
     pageToken = page.nextPageToken;
@@ -129,7 +129,7 @@ export async function fetchEmail(accessToken: string, id: string): Promise<Fetch
   const msg = await gget<{
     internalDate?: string;
     payload?: GmailPart & { headers?: { name: string; value: string }[] };
-  }>(accessToken, `/messages/${id}?format=full`);
+  }>(accessToken, `/messages/${encodeURIComponent(id)}?format=full`);
   const headers = msg.payload?.headers ?? [];
   const h = (name: string) =>
     headers.find((x) => x.name.toLowerCase() === name.toLowerCase())?.value ?? "";
