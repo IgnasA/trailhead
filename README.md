@@ -96,9 +96,14 @@ step by step. Environment variables live in `.env.local` (git-ignored):
 
 ```bash
 pnpm typecheck     # tsc --noEmit in every package
-pnpm test          # vitest in packages/domain (other packages have no tests yet)
+pnpm test          # vitest in packages/domain and apps/web
 pnpm --filter @trailhead/web build
+# migrations + SQL assertions, against a throwaway local Postgres only
+TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres scripts/test-migrations.sh
 ```
+
+The latest security review and its open recommendations are in
+[docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).
 
 CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm test` on every
 pull request. There is no linter configured yet.
