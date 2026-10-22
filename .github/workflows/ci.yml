@@ -8,6 +8,7 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# Nothing here writes to the repository; keep the job token read-only.
 permissions:
   contents: read
 

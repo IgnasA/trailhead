@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
+import { SECURITY_HEADERS } from "./lib/http/securityHeaders";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  headers: async () => [{ source: "/:path*", headers: SECURITY_HEADERS }],
   // Native cross-fade between routes; honours prefers-reduced-motion via CSS.
   experimental: { viewTransition: true },
   transpilePackages: ["@trailhead/domain", "@trailhead/gmail", "@trailhead/history"],

@@ -10,6 +10,10 @@ on:
       - "packages/domain/**"
       - ".github/workflows/deploy-worker.yml"
 
+# Nothing here writes to the repository; keep the job token read-only.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

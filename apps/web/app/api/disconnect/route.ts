@@ -3,10 +3,12 @@
 import { NextResponse } from "next/server";
 import pg from "pg";
 import { supabaseServer } from "../../../lib/supabase/server";
+import { isSameOrigin } from "../../../lib/http/sameOrigin";
 
 let pool: pg.Pool | undefined;
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const supabase = await supabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -32,6 +34,10 @@ export async function POST() {
   }
 
   const { error } = await supabase.rpc("disconnect_gmail");
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    // The message is Postgres's, not ours: log it, don't hand it to the browser.
+    console.error("disconnect_gmail failed:", error.message);
+    return NextResponse.json({ error: "disconnect_failed" }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }

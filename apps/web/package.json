@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'no web tests yet'",
+    "test": "vitest run",
     "copy:maplibre": "node scripts/copy-maplibre-worker.mjs",
     "predev": "node scripts/copy-maplibre-worker.mjs",
     "prebuild": "node scripts/copy-maplibre-worker.mjs"
@@ -31,6 +31,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
   }
 }
