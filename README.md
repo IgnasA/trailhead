@@ -1,5 +1,7 @@
 # Trailhead
 
+[![CI](https://github.com/IgnasA/trailhead/actions/workflows/ci.yml/badge.svg)](https://github.com/IgnasA/trailhead/actions/workflows/ci.yml)
+
 Connect Gmail and see everywhere you've ever travelled.
 
 Trailhead reconstructs your flight history from the booking confirmations,
