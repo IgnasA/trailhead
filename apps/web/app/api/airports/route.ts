@@ -7,6 +7,7 @@
 // This endpoint answers only "what in the world matches these letters".
 import { NextResponse } from "next/server";
 import { supabaseServer } from "../../../lib/supabase/server";
+import { airportSearchTerm } from "../../../lib/http/airportTerm";
 
 export interface AirportHit {
   iata: string;
@@ -27,9 +28,9 @@ export async function GET(request: Request) {
   const q = (new URL(request.url).searchParams.get("q") ?? "").trim();
   if (!q) return NextResponse.json({ hits: [] });
 
-  const supabase = await supabaseServer();
-  const term = q.replace(/[%_,()]/g, "");
+  const term = airportSearchTerm(q);
   if (!term) return NextResponse.json({ hits: [] });
+  const supabase = await supabaseServer();
 
   const { data, error } = await supabase
     .from("airports")
