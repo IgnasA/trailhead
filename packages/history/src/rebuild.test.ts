@@ -5,7 +5,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { FlightExtraction } from "@trailhead/domain";
 import { rebuildHistory, type Queryable } from "./index.js";
 
@@ -95,13 +95,21 @@ async function applyEffect(db: PGlite, flightId: string, kind: string, fix: Reco
   }
 }
 
-describe("rebuildHistory replays corrections", () => {
+// Applying every migration costs a few seconds, so it happens once per file
+// and each test starts from emptied user tables instead. The generous timeout
+// is for a loaded CI runner, not for any single slow step.
+describe("rebuildHistory replays corrections", { timeout: 30_000 }, () => {
   let db: PGlite;
   // PGlite's query has the right shape; the cast only narrows its generics.
   const rebuild = () => rebuildHistory(db as unknown as Queryable, USER);
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     db = await freshDatabase();
+  }, 60_000);
+
+  beforeEach(async () => {
+    await db.exec(`truncate corrections, flight_sources, flights, trips, manual_flights,
+                            email_extractions, source_emails`);
     // A year from Vilnius. The March outbound was read as VIL (Dakhla) — the
     // real wrong-but-real-airport bug from ticket 018 — and the June "flight"
     // was a fare-sale email.
